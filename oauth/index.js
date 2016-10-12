@@ -242,7 +242,6 @@ function sendError(req, res, next, logger, stats, code, message) {
 
   if (!res.finished) res.setHeader('content-type', 'application/json');
   res.end(JSON.stringify(response));
-  stats.incrementStatusCount(res.statusCode);
   next(code, message);
   return code;
 }
