@@ -10,7 +10,7 @@ module.exports.init = function(config, logger, stats) {
       var scope = res.proxy.scope;
       var env= res.proxy.env;
       var base_path = res.proxy.base_path;
-      var apiKey = req.headers['api-key-header'] || req.headers['api-key-header'] || req.headers['x-api-key'];
+      var apiKey = req.headers['api-key-header'] || req.headers['x-api-key'];
       if (!apiKey) {
         logger.error("No API Key provided", 'oauth');
         res.statusCode = 401;
