@@ -10,5 +10,6 @@ module.exports = {
   quota:require('./quota'),
   'quota-memory':require('./quota-memory'),
   spikearrest:require('./spikearrest'),
+  'verify-api-key': require('./verify-api-key'),
   'transform-uppercase':require('./transform-uppercase')
 }
