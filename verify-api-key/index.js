@@ -28,7 +28,6 @@ module.exports.init = function(config, logger, stats) {
             action: 'verify'
           }
         }
-        console.log("Options: -----\n\n", options);
         request.post(options, function (err, resp, body) {
           var jsonBody = JSON.parse(body);
           if (err) {
@@ -40,6 +39,9 @@ module.exports.init = function(config, logger, stats) {
               logger.error(jsonBody.result.errorCode, 'verify-api-key');
               res.statusCode = 401;
               next (jsonBody.result.errorCode);
+            }
+            else if (jsonBody.result.status == 'REVOKED') {
+              next("API Key has been revoked.", data);
             }
             else {
               next(null, data);
