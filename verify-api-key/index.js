@@ -3,9 +3,8 @@ var request = require('request');
 var util = require('util');
 module.exports.init = function(config, logger, stats) {
   
-  var apidUrl = (process.env.APID_ENDPOINT || 'http://localhost:9090') + '/verifiers/apikey';
-  // TODO until apid is fully working, we need this override
-  // apidUrl = 'http://localhost:9090/verifiers/apikey';
+  var apidUrl = (process.env.APID_ENDPOINT || 'http://localhost:9090') + '/verifiers/verify';
+
   return {
     onrequest: function(req, res, data, next) {
       var scope = res.proxy.scope;
@@ -41,7 +40,8 @@ module.exports.init = function(config, logger, stats) {
               next (jsonBody.result.errorCode);
             }
             else if (jsonBody.result.status == 'REVOKED') {
-              next("API Key has been revoked.", data);
+              res.statusCode = 401;
+              next("API Key has been revoked", data);
             }
             else {
               next(null, data);
