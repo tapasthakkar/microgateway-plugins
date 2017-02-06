@@ -1,7 +1,10 @@
 'use strict';
 
 var debug = require('debug')('plugin:new-analytics');
+var ApidAnalytics = require('./apidanalytics');
 module.exports.init = function(config, logger, stats) {
+
+  const analytics = ApidAnalytics.create(config);
   return {
 
     testprobe: function() { return analytics },
@@ -75,10 +78,11 @@ module.exports.init = function(config, logger, stats) {
           target_sent_end_timestamp: targetReq._streamStarted,
           target_sent_start_timestamp: targetReq._streamEnded,
           target: res.proxy.target_name,
-          recordType: 'APIAnalytics'
+          recordType: 'APIAnalytics',
+          scopeId: res.proxy.scope
         };
 
-        console.log(record);
+        analytics.push(record);
       });
       
       next(null, data);
