@@ -21,14 +21,20 @@ module.exports.init = function(config, logger, stats) {
           url: apidUrl,
           form: {
             key: apiKey,
-            organization: scope,
-            environment: env,
+            scopeuuid: scope,
             uriPath: base_path,
             action: 'verify'
           }
         }
         request.post(options, function (err, resp, body) {
-          var jsonBody = JSON.parse(body);
+          var jsonBody;
+          try {
+            jsonBody = JSON.parse(body);
+          } catch (e) {
+            logger.error(err, 'verify-api-key');
+            next(err, data); 
+          }
+
           if (err) {
             logger.error(err, 'verify-api-key');
             next(err, data);
@@ -40,10 +46,12 @@ module.exports.init = function(config, logger, stats) {
               next (jsonBody.result.errorCode);
             }
             else if (jsonBody.result.status == 'REVOKED') {
+              logger.info('API key has been revoked.', 'verify-api-key');
               res.statusCode = 401;
               next("API Key has been revoked", data);
             }
             else {
+              logger.info('API key has been verified.', 'verify-api-key');
               next(null, data);
             }
           }
