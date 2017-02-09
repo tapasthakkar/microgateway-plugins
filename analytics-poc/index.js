@@ -5,24 +5,43 @@ var ApidAnalytics = require('./apidanalytics');
 module.exports.init = function(config, logger, stats) {
 
   const analytics = ApidAnalytics.create(config);
-  return {
+  var prematureErrorListener;  return {
 
     testprobe: function() { return analytics },
     onrequest: function(req, res, targetReq, targetRes, data, next) {
-      //console.log('Incoming request');
+      console.log('onrequest');
       if(!req._clientReceived) {
         req._clientReceived = Date.now();
       }
+        
+      prematureErrorListener = () => {
+        console.log('finished');
+        var record = {
+          response_status_code: res.statusCode,
+          client_received_start_timestamp: req._clientReceived,
+          scopeId: res.proxy.scope
+        }; 
+        
+        
+        if(req.headers['x-api-key']) {
+          record.client_id = req.headers['x-api-key'];
+        }
+
+        analytics.push(record);
+      };
+
+      res.on('finish', prematureErrorListener);
       next();
     },
     ondata_request:function(req, res, targetReq, targetRes, data, next) {
-      //console.log('data events');
+      console.log('ondata_request');
       if(!req._streamStarted) {
         req._streamStarted = Date.now();
       } 
       next(null, data);
     },
     onend_request:function(req, res, targetReq, targetRes, data, next) {
+      console.log('onend_request');
       if(!req._streamStarted) {
         req._streamStarted = Date.now();
       } 
@@ -37,20 +56,24 @@ module.exports.init = function(config, logger, stats) {
       next(null, data);
     },
     ondata_response:function(req, res, targetReq, targetRes, data, next) {
-
+      console.log('ondata_response');
       if(!targetReq._streamStarted) {
         targetReq._streamStarted = Date.now();
       }
       next(null, data);
     },
     onend_response:function(req, res, targetReq, targetRes, data, next) {
-
+      console.log('onend_response');
       if(!targetReq._streamStarted) {
         targetReq._streamStarted = Date.now();
       }
 
       if(!targetReq._streamEnded) {
         targetReq._streamEnded = Date.now();
+      }
+
+      if(prematureErrorListener) {
+        res.removeListener('finish', prematureErrorListener);
       }
 
       res.on('finish', () => {
@@ -82,12 +105,17 @@ module.exports.init = function(config, logger, stats) {
           scopeId: res.proxy.scope
         };
 
+        if(req.headers['x-api-key']) {
+          record.client_id = req.headers['x-api-key'];
+        }
+
         analytics.push(record);
       });
       
       next(null, data);
     },
     onresponse: function(req, res, targetReq, targetRes, data,  next) {
+      console.log('onresponse');
       var writeToRes = res.write;
 
       res.write = (chunk, encoding, callback) => {

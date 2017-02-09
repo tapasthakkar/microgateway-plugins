@@ -68,7 +68,6 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
 ApidAnalytics.prototype.send = function(scopeId, data, cb) {
     const formattedUri = util.format(this.formattedApidUriTemplate, scopeId);
 
-    console.log(JSON.stringify(data));
     const opts = {
         uri: formattedUri,
         method: 'POST',
