@@ -4,18 +4,16 @@ var debug = require('debug')('plugin:new-analytics');
 var ApidAnalytics = require('./apidanalytics');
 module.exports.init = function(config, logger, stats) {
 
-  const analytics = ApidAnalytics.create(config);
+  const analytics = ApidAnalytics.create(config, logger);
   var prematureErrorListener;  return {
 
     testprobe: function() { return analytics },
     onrequest: function(req, res, targetReq, targetRes, data, next) {
-      console.log('onrequest');
       if(!req._clientReceived) {
         req._clientReceived = Date.now();
       }
         
       prematureErrorListener = () => {
-        console.log('finished');
         var record = {
           response_status_code: res.statusCode,
           client_received_start_timestamp: req._clientReceived,
@@ -34,14 +32,12 @@ module.exports.init = function(config, logger, stats) {
       next();
     },
     ondata_request:function(req, res, targetReq, targetRes, data, next) {
-      console.log('ondata_request');
       if(!req._streamStarted) {
         req._streamStarted = Date.now();
       } 
       next(null, data);
     },
     onend_request:function(req, res, targetReq, targetRes, data, next) {
-      console.log('onend_request');
       if(!req._streamStarted) {
         req._streamStarted = Date.now();
       } 
@@ -56,14 +52,12 @@ module.exports.init = function(config, logger, stats) {
       next(null, data);
     },
     ondata_response:function(req, res, targetReq, targetRes, data, next) {
-      console.log('ondata_response');
       if(!targetReq._streamStarted) {
         targetReq._streamStarted = Date.now();
       }
       next(null, data);
     },
     onend_response:function(req, res, targetReq, targetRes, data, next) {
-      console.log('onend_response');
       if(!targetReq._streamStarted) {
         targetReq._streamStarted = Date.now();
       }
@@ -115,7 +109,6 @@ module.exports.init = function(config, logger, stats) {
       next(null, data);
     },
     onresponse: function(req, res, targetReq, targetRes, data,  next) {
-      console.log('onresponse');
       var writeToRes = res.write;
 
       res.write = (chunk, encoding, callback) => {

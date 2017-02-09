@@ -4,7 +4,7 @@ module.exports = {
   'accumulate-request':require('./accumulate-request'),
   'accumulate-response':require('./accumulate-response'),
   analytics:require('./analytics'),
-  'analytics-poc': require('./analytics-poc'),
+  'analytics-apid': require('./analytics-apid'),
   'header-uppercase':require('./header-uppercase'),
   oauth:require('./oauth'),
   quota:require('./quota'),

@@ -1,18 +1,21 @@
-const util = require('util')
+const util = require('util');
+const zlib = require('zlib');
 const request = require('request');
 const async = require('async');
 const Analytics = require('volos-analytics-common');
 
 
-var create = function(options) {
-   var spi = new ApidAnalytics(options);
+var create = function(options, logger) {
+   var spi = new ApidAnalytics(options, logger);
    return new Analytics(spi, options);
 }
 module.exports.create = create;
 
-var ApidAnalytics = function(options) {
+var ApidAnalytics = function(options, logger) {
   this.apidEndpoint = options.apidEndpoint;
   this.formattedApidUriTemplate = this.apidEndpoint +'/analytics/%s';
+  this.compress = options.compress;
+  this.logger = logger;
 }
 
 ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
@@ -67,6 +70,7 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
 
 ApidAnalytics.prototype.send = function(scopeId, data, cb) {
     const formattedUri = util.format(this.formattedApidUriTemplate, scopeId);
+    var self = this;
 
     const opts = {
         uri: formattedUri,
@@ -82,15 +86,49 @@ ApidAnalytics.prototype.send = function(scopeId, data, cb) {
 
     request(opts, (err, res, body) => {
         if(err) {
-            return cb(err);
+          self.logger.error(err, 'analytics');
+          return cb(err);
         }
 
-        console.log(res.statusCode);
-        console.log(res.body);
         if(res.statusCode == 400) {
-            return cb(null, scopeId, data)
+          self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+          return cb(null, scopeId, data)
         } else {
-            return cb(null, scopeId, [])
+          self.logger.info('Analytics records flushed successfully', 'analytics');
+          return cb(null, scopeId, [])
         }
     });
 };
+
+
+ApidAnalytics.prototype.sendCompressed = function(scopeId, data, cb) {
+  var recordsObject = {records: data}
+  const formattedUri = util.format(this.formattedApidUriTemplate, scopeId);
+  var self = this;
+
+  const opts = {
+    uri: formattedUri,
+    method: 'POST',
+    headers: {
+      'Content-Type':'application/json',
+      'Content-Encoding': 'gzip'
+    },
+    json: zlib.gzipSync(JSON.stringify(recordsObject))
+  };
+
+  request(opts, (err, res, body) => {
+        if(err) {
+          self.logger.error(err, 'analytics');
+          return cb(err);
+        }
+
+        if(res.statusCode == 400) {
+          self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+          return cb(null, scopeId, data)
+        } else {
+          self.logger.info('Analytics records flushed successfully', 'analytics');
+          return cb(null, scopeId, [])
+        }
+    });
+};
+
