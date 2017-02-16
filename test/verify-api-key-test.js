@@ -1,6 +1,23 @@
 const verifyApiKey = require('../verify-api-key/index');
 const assert = require('assert');
-var formBody = require("body/form")
+const qs = require('querystring');
+
+const accumulate = (req, cb) => {
+  var buf = [];
+
+  req.on('data', (d) => {
+    buf += d;
+  });
+
+  req.on('end', () => {
+    try {
+      var obj = qs.parse(buf.toString());
+      return cb(null, obj);
+    } catch(e) {
+      return cb(e);
+    }
+  });
+}
 
 describe('verify-api-key plugin', () => {
   var plugin = null;
@@ -14,13 +31,13 @@ describe('verify-api-key plugin', () => {
     var express = require('express')
     var app = express()
 
-    app.post('/verifiers/verify', function (req, res) {
+    app.post('/verifiers/apikey', function (req, res) {
       res.setHeader("content-type", "application/json")
 
-      formBody(req, res, function (err, body) {
+      accumulate(req, function (err, body) {
         if (err) {
           res.statusCode = 500
-          return res.end("Malformed post bosy.  Should not happen");
+          return res.end("Malformed post body.  Should not happen");
         }
 
         if (body.key === 'INVALID-KEY') {
@@ -39,7 +56,10 @@ describe('verify-api-key plugin', () => {
 
   beforeEach(() => {
     var config = {};
-    var logger = {error: (data, err) => console.error(data, err)};
+    var logger = {
+      error: (data, err) => console.error(data, err),
+      info: (data) => console.log(data)
+    };
     var stats = {};
 
     plugin = verifyApiKey.init.apply(null, [config, logger, stats]);
