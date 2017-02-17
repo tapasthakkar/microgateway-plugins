@@ -90,9 +90,12 @@ ApidAnalytics.prototype.send = function(scopeId, data, cb) {
           return cb(err);
         }
 
-        if(res.statusCode == 400) {
+        if(res.statusCode == 500) {
           self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
           return cb(null, scopeId, data)
+        } else if(res.statusCode == 400) {
+          self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+          return cb(null, scopeId, [])
         } else {
           self.logger.info('Analytics records flushed successfully', 'analytics');
           return cb(null, scopeId, [])
@@ -106,29 +109,38 @@ ApidAnalytics.prototype.sendCompressed = function(scopeId, data, cb) {
   const formattedUri = util.format(this.formattedApidUriTemplate, scopeId);
   var self = this;
 
+  const zipper = zlib.createGzip();
+  
+  
   const opts = {
     uri: formattedUri,
     method: 'POST',
     headers: {
       'Content-Type':'application/json',
       'Content-Encoding': 'gzip'
-    },
-    json: zlib.gzipSync(JSON.stringify(recordsObject))
+    }
   };
 
   request(opts, (err, res, body) => {
-        if(err) {
-          self.logger.error(err, 'analytics');
-          return cb(err);
-        }
+    if(err) {
+      self.logger.error(err, 'analytics');
+      return cb(err);
+    }
 
-        if(res.statusCode == 400) {
-          self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
-          return cb(null, scopeId, data)
-        } else {
-          self.logger.info('Analytics records flushed successfully', 'analytics');
-          return cb(null, scopeId, [])
-        }
-    });
+    if(res.statusCode == 500) {
+      self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+      return cb(null, scopeId, data)
+    } else if(res.statusCode == 400) {
+      self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+      return cb(null, scopeId, [])
+    } else {
+      self.logger.info('Analytics records flushed successfully', 'analytics');
+      return cb(null, scopeId, [])
+    }
+  });
+
+  zipper.pipe(req);
+  zipper.end(JSON.stringify(recordsObject));
+
 };
 
