@@ -37,6 +37,15 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
     Object.keys(recordsPerScope).forEach((k) => {
         var data = recordsPerScope[k];
         parallelArgs[k] = (callback) => {
+          if(self.compress) {
+            self.sendCompressed(k, data, (err, scopeId, data) => {
+              if(err) {
+                return callback(err);
+              } else {
+                callback(null, data);
+              }
+            })
+          } else {
             self.send(k, data, (err, scopeId, data) => {
               if(err) {
                 return callback(err);
@@ -44,6 +53,7 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
                 callback(null, data);
               }
             })
+          }
         }
     });
 
@@ -110,8 +120,6 @@ ApidAnalytics.prototype.sendCompressed = function(scopeId, data, cb) {
   var self = this;
 
   const zipper = zlib.createGzip();
-  
-  
   const opts = {
     uri: formattedUri,
     method: 'POST',
@@ -121,7 +129,7 @@ ApidAnalytics.prototype.sendCompressed = function(scopeId, data, cb) {
     }
   };
 
-  request(opts, (err, res, body) => {
+  var req = request(opts, (err, res, body) => {
     if(err) {
       self.logger.error(err, 'analytics');
       return cb(err);
