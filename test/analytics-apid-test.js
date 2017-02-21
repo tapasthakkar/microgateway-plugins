@@ -15,7 +15,7 @@ const mockLogger = {
 const config = {
   apidEndpoint: 'http://localhost:9191',
   compress: false,
-  flushInterval: 10
+  flushInterval: 250
 }
 
 const stats = {};
@@ -541,6 +541,131 @@ describe('analytics plugin', () => {
 
     analyticsServer = startAnalyticsServer(handler, () => {
       testPlugin.onend_response(req, res, targetReq, targetRes, 'foo', (err, data) => {
+        finishFunc();
+      });
+    });
+  });
+
+  it('will re-send an http request payload that receives a 500 response', (done) => {
+    
+    assert.equal(testPlugin.onend_response.length, 6);
+
+    var analyticsObject = testPlugin.testprobe();
+    var count = 0;
+
+    var eventCalled;
+    var targetReq = {
+      _streamStarted: 'foobar'
+    };
+
+    var finishFunc;
+    var testRes = {
+      on: (ev, hd) => {
+        if(ev == 'finish') {
+          finishFunc = hd;
+        }
+      },
+      proxy: {
+        scope: 'fooscope',
+        target_name: 'footargetname',
+        proxy_name: 'fooproxyname',
+        revision: 'foorevision'
+      },
+      statusCode: 200,
+      _writeToClientStart: 'fooclientstart',
+      _writeToClientEnd: 'fooclientend',
+    };
+
+    var testReq = {
+      connection: {
+        remoteAddress: '127.0.0.1'
+      },
+      _clientReceived: 'fooclientreceived',
+      _clientReceivedEnd: 'fooclientreceivedend',
+      _streamEnded: 'foostreamended',
+      _streamStarted: 'foostreamstarted',
+      _gatewayFlowId: '1234',
+      headers: {
+        host: 'foo.host',
+        'user-agent': 'curl!'
+      },
+      url: '/foo?bar=baz',
+      method: 'GET'
+    }
+
+    var targetRes = {
+      statusCode: 200
+    }
+
+    var targetReq = {
+      _streamEnded: 'foostreamended',
+      _streamStarted: 'foostreamstarted'
+    }
+
+    var testRecord = {
+      apiproxy: 'fooproxyname',
+      apiproxy_revision: 'foorevision',
+      client_ip: '127.0.0.1',
+      client_received_start_timestamp: 'fooclientreceived',
+      client_received_end_timestamp: 'fooclientreceivedend',
+      client_sent_start_timestamp: 'fooclientstart',
+      client_sent_end_timestamp: 'fooclientend',
+      gateway_flow_id: '1234',
+      request_path: '/foo',
+      request_uri: 'http://foo.host/foo?bar=baz' ,
+      request_verb: 'GET',
+      response_status_code: 200,
+      useragent: 'curl!',
+      target_received_end_timestamp: 'foostreamended',
+      target_received_start_timestamp: 'foostreamstarted',
+      target_response_code: 200,
+      target_sent_end_timestamp: 'foostreamended',
+      target_sent_start_timestamp: 'foostreamstarted',
+      target: 'footargetname',
+      recordType: 'APIAnalytics',
+      scopeId: 'fooscope'
+    };
+
+     const handler = (req, res) => {
+      if(count == 0) {
+        res.writeHead(500);
+        count++;
+        finishFunc();
+        return res.end();
+      } else {
+        var buf = [];
+
+        req.on('data', (d)=> {
+          buf.push(d);
+        });
+
+        req.on('end', ()=>{
+          //iterate through each record key. 
+          //Ensure they are equal
+          var records = JSON.parse(buf.toString());
+          assert.ok(records.records);
+          assert.equal(records.records.length, 1)
+          var firstRecord = records.records[0];
+          
+          
+          //assert that the records are sent to the proper path
+          assert.equal(req.url, '/analytics/fooscope');
+
+          Object.keys(firstRecord).forEach((k) => {
+            assert.equal(firstRecord[k], testRecord[k]);
+          });
+
+          res.writeHead(200);
+          res.end();
+          done();
+        })
+      }
+      
+      
+    };
+
+    analyticsServer = startAnalyticsServer(handler, () => {
+      testPlugin.onend_response(testReq, testRes, targetReq, targetRes, 'foo', (err, data) => {
         finishFunc();
       });
     });

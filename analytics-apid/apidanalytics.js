@@ -58,6 +58,7 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
     });
 
     async.parallel(parallelArgs, (err, results)=>{
+      
       if(err) {
         return flushCallback(err)
       }
@@ -81,7 +82,6 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
 ApidAnalytics.prototype.send = function(scopeId, data, cb) {
     const formattedUri = util.format(this.formattedApidUriTemplate, scopeId);
     var self = this;
-
     const opts = {
         uri: formattedUri,
         method: 'POST',
@@ -104,7 +104,7 @@ ApidAnalytics.prototype.send = function(scopeId, data, cb) {
           self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
           return cb(null, scopeId, data)
         } else if(res.statusCode == 400) {
-          self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+          self.logger.error('Error flushing analytics records. Not retrying...', 'analytics');  
           return cb(null, scopeId, [])
         } else {
           self.logger.info('Analytics records flushed successfully', 'analytics');
