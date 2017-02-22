@@ -58,6 +58,7 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
     });
 
     async.parallel(parallelArgs, (err, results)=>{
+      
       if(err) {
         return flushCallback(err)
       }
@@ -81,7 +82,6 @@ ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
 ApidAnalytics.prototype.send = function(scopeId, data, cb) {
     const formattedUri = util.format(this.formattedApidUriTemplate, scopeId);
     var self = this;
-
     const opts = {
         uri: formattedUri,
         method: 'POST',
@@ -120,7 +120,7 @@ ApidAnalytics.prototype.sendCompressed = function(scopeId, data, cb) {
   var self = this;
 
   const zipper = zlib.createGzip();
-  
+
   const opts = {
     uri: formattedUri,
     method: 'POST',

@@ -5,8 +5,8 @@ var ApidAnalytics = require('./apidanalytics');
 module.exports.init = function(config, logger, stats) {
 
   const analytics = ApidAnalytics.create(config, logger);
-  var prematureErrorListener;  return {
-
+  var prematureErrorListener;
+  return {
     testprobe: function() { return analytics },
     onrequest: function(req, res, targetReq, targetRes, data, next) {
       if(!req._clientReceived) {
@@ -92,8 +92,8 @@ module.exports.init = function(config, logger, stats) {
           target_received_end_timestamp: req._streamEnded,
           target_received_start_timestamp: req._streamStarted,
           target_response_code: targetRes.statusCode,
-          target_sent_end_timestamp: targetReq._streamStarted,
-          target_sent_start_timestamp: targetReq._streamEnded,
+          target_sent_end_timestamp: targetReq._streamEnded,
+          target_sent_start_timestamp: targetReq._streamStarted,
           target: res.proxy.target_name,
           recordType: 'APIAnalytics',
           scopeId: res.proxy.scope
