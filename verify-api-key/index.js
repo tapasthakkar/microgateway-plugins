@@ -1,9 +1,13 @@
 'use strict';
 var request = require('request');
 var util = require('util');
+const url = require('url');
+
 module.exports.init = function(config, logger, stats) {
   
-  var apidUrl = (process.env.APID_ENDPOINT || 'http://localhost:9090') + '/verifiers/apikey';
+  var parsedUrl = url.parse((config.apidEndpoint || 'http://localhost:9090'));
+  parsedUrl.pathname = '/verifiers/apikey';
+  var apidUrl = url.format(parsedUrl);
 
   return {
     onrequest: function(req, res, data, next) {
