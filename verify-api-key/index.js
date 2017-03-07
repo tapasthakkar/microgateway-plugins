@@ -39,19 +39,24 @@ module.exports.init = function(config, logger, stats) {
           }
         }
         request.post(options, function (err, resp, body) {
-          var jsonBody;
-          try {
-            jsonBody = JSON.parse(body);
-          } catch (e) {
-            logger.error(err, 'verify-api-key');
-            return next(err, data); 
-          }
+          console.log(err);
 
           if (err) {
+            if(err.code == 'ECONNREFUSED') {
+              err.message = util.format('Error connecting to apid at: %s to verify api key', apidUrl);
+            }
             logger.error(err, 'verify-api-key');
             return next(err, data);
           }
           else {
+            var jsonBody;
+            try {
+              jsonBody = JSON.parse(body);
+            } catch (e) {
+              logger.error(e, 'verify-api-key');
+              return next(e, data); 
+            }
+
             if (jsonBody.type == 'ErrorResult') {
               logger.error(jsonBody.result.errorCode, 'verify-api-key');
               res.statusCode = 401;
