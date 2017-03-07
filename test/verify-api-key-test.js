@@ -151,4 +151,32 @@ describe('verify-api-key plugin', () => {
 
     plugin.onrequest.apply(null, [req, res, Buffer.alloc(5, 'a'), cb]);
   });
+
+  it('will send back an error if apid is inaccessible', (done) => {
+
+    var config = {
+      apidEndpoint: 'http://localhost:9091/'
+    };
+    var logger = {
+      error: (data, err) => console.error(data, err),
+      info: (data) => console.log(data)
+    };
+    var stats = {};
+
+    badPlugin = verifyApiKey.init.apply(null, [config, logger, stats]);
+
+    var req = {
+      headers: {
+      },
+      url: '/foo?apikey=VALID-KEY'
+    }
+    var res = {proxy: proxy};
+    var cb = (err, result) => {
+      assert.equal(err.code, 'ECONNREFUSED');
+      assert.equal(err.message, 'Error connecting to apid at: http://localhost:9091/verifiers/apikey to verify api key');
+      done();
+    }
+
+    badPlugin.onrequest.apply(null, [req, res, Buffer.alloc(5, 'a'), cb]);
+  });
 })
