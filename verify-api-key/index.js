@@ -2,6 +2,7 @@
 var request = require('request');
 var util = require('util');
 const url = require('url');
+const qs = require('querystring');
 
 module.exports.init = function(config, logger, stats) {
   
@@ -15,6 +16,13 @@ module.exports.init = function(config, logger, stats) {
       var env= res.proxy.env;
       var base_path = res.proxy.base_path;
       var apiKey = req.headers['api-key-header'] || req.headers['x-api-key'];
+      var parsedRequestUrl = url.parse(req.url);
+
+      if(parsedRequestUrl.query) {
+        var parsedQuery = qs.parse(parsedRequestUrl.query);
+        apiKey = parsedQuery.apikey;
+      }
+      
       if (!apiKey) {
         logger.error("No API Key provided", 'oauth');
         res.statusCode = 401;
@@ -31,19 +39,23 @@ module.exports.init = function(config, logger, stats) {
           }
         }
         request.post(options, function (err, resp, body) {
-          var jsonBody;
-          try {
-            jsonBody = JSON.parse(body);
-          } catch (e) {
-            logger.error(err, 'verify-api-key');
-            next(err, data); 
-          }
 
           if (err) {
+            if(err.code == 'ECONNREFUSED') {
+              err.message = util.format('Error connecting to apid at: %s to verify api key', apidUrl);
+            }
             logger.error(err, 'verify-api-key');
-            next(err, data);
+            return next(err, data);
           }
           else {
+            var jsonBody;
+            try {
+              jsonBody = JSON.parse(body);
+            } catch (e) {
+              logger.error(e, 'verify-api-key');
+              return next(e, data); 
+            }
+
             if (jsonBody.type == 'ErrorResult') {
               logger.error(jsonBody.result.errorCode, 'verify-api-key');
               res.statusCode = 401;
