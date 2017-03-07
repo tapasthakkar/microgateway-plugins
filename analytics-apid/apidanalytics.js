@@ -19,6 +19,7 @@ var ApidAnalytics = function(options, logger) {
 }
 
 ApidAnalytics.prototype.flush = function(recordsQueue, flushCallback) {
+    this.logger.info('Beginning to flush analytics data.', 'analytics');  
     var recordsPerScope = {}
     var self = this;
     recordsQueue.forEach((r) => {

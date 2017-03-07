@@ -12,6 +12,7 @@
     "debug": "^2.2.0",
     "jsonwebtoken": "^5.0.1",
     "lodash": "^3.10.1",
+    "on-finished": "^2.3.0",
     "request": "^2.65.0",
     "volos-analytics-apigee": "^0.4.0",
     "volos-cache-memory": "^0.10.0",

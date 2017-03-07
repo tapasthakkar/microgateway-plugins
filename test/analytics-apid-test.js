@@ -223,13 +223,7 @@ describe('analytics plugin', () => {
       _streamStarted: 'foobar'
     };
 
-    var finishFunc;
     var res = {
-      on: (ev, hd) => {
-        if(ev == 'finish') {
-          finishFunc = hd;
-        }
-      },
       proxy: {
         scope: 'fooscope',
         target_name: 'footargetname',
@@ -302,7 +296,7 @@ describe('analytics plugin', () => {
 
 
     testPlugin.onend_response(req, res, targetReq, targetRes, 'foo', (err, data) => {
-      finishFunc();
+      
     });
   });
 
@@ -318,11 +312,6 @@ describe('analytics plugin', () => {
 
     var finishFunc;
     var res = {
-      on: (ev, hd) => {
-        if(ev == 'finish') {
-          finishFunc = hd;
-        }
-      },
       proxy: {
         scope: 'fooscope',
         target_name: 'footargetname',
@@ -415,7 +404,7 @@ describe('analytics plugin', () => {
 
     analyticsServer = startAnalyticsServer(handler, () => {
       testPlugin.onend_response(req, res, targetReq, targetRes, 'foo', (err, data) => {
-        finishFunc();
+        
       });
     });
   });
@@ -438,13 +427,8 @@ describe('analytics plugin', () => {
       _streamStarted: 'foobar'
     };
 
-    var finishFunc;
+    
     var res = {
-      on: (ev, hd) => {
-        if(ev == 'finish') {
-          finishFunc = hd;
-        }
-      },
       proxy: {
         scope: 'fooscope',
         target_name: 'footargetname',
@@ -541,7 +525,7 @@ describe('analytics plugin', () => {
 
     analyticsServer = startAnalyticsServer(handler, () => {
       testPlugin.onend_response(req, res, targetReq, targetRes, 'foo', (err, data) => {
-        finishFunc();
+        
       });
     });
   });
@@ -558,13 +542,7 @@ describe('analytics plugin', () => {
       _streamStarted: 'foobar'
     };
 
-    var finishFunc;
     var testRes = {
-      on: (ev, hd) => {
-        if(ev == 'finish') {
-          finishFunc = hd;
-        }
-      },
       proxy: {
         scope: 'fooscope',
         target_name: 'footargetname',
@@ -630,7 +608,6 @@ describe('analytics plugin', () => {
       if(count == 0) {
         res.writeHead(500);
         count++;
-        finishFunc();
         var respBody = JSON.stringify({
       "errrorCode":"INTERNAL_SERVER_ERROR",
       "reason":"Service is not initialized completely"});
@@ -669,7 +646,10 @@ describe('analytics plugin', () => {
 
     analyticsServer = startAnalyticsServer(handler, () => {
       testPlugin.onend_response(testReq, testRes, targetReq, targetRes, 'foo', (err, data) => {
-        finishFunc();
+        setTimeout(()=> {
+          testPlugin.onend_response(testReq, testRes, targetReq, targetRes, 'foo', (err, data) => {
+          });
+        }, 500)
       });
     });
   });
