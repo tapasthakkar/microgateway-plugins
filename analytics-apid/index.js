@@ -17,6 +17,7 @@ module.exports.init = function(config, logger, stats) {
         var record = {
           response_status_code: res.statusCode,
           client_received_start_timestamp: req._clientReceived,
+          client_received_end_timestamp: req._clientReceived + 1,
           scopeId: res.proxy.scope
         }; 
         
@@ -24,7 +25,7 @@ module.exports.init = function(config, logger, stats) {
         if(req.headers['x-api-key']) {
           record.client_id = req.headers['x-api-key'];
         }
-
+        
         analytics.push(record);
       };
 
@@ -102,7 +103,7 @@ module.exports.init = function(config, logger, stats) {
         if(req.headers['x-api-key']) {
           record.client_id = req.headers['x-api-key'];
         }
-
+        
         analytics.push(record);
       });
       
