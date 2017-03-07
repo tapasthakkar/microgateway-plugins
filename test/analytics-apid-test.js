@@ -57,14 +57,10 @@ describe('analytics plugin', () => {
     var req = {};
 
     var res = {
-      on: (ev, hd) => {
-        eventCalled = ev; 
-      }
     };
 
     testPlugin.onrequest(req, res, {}, {}, {}, () => {
       assert.ok(req._clientReceived);
-      assert.equal(eventCalled, 'finish');
       done(); 
     });
   });
