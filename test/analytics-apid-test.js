@@ -631,7 +631,10 @@ describe('analytics plugin', () => {
         res.writeHead(500);
         count++;
         finishFunc();
-        return res.end();
+        var respBody = JSON.stringify({
+      "errrorCode":"INTERNAL_SERVER_ERROR",
+      "reason":"Service is not initialized completely"});
+        return res.end(respBody);
       } else {
         var buf = [];
 
