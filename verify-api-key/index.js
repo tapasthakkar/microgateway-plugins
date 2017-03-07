@@ -17,9 +17,12 @@ module.exports.init = function(config, logger, stats) {
       var base_path = res.proxy.base_path;
       var apiKey = req.headers['api-key-header'] || req.headers['x-api-key'];
       var parsedRequestUrl = url.parse(req.url);
-      var parsedQuery = qs.parse(parsedRequestUrl.query);
-      apiKey = query.apikey;
 
+      if(parsedRequestUrl.query) {
+        var parsedQuery = qs.parse(parsedRequestUrl.query);
+        apiKey = query.apikey;
+      }
+      
       if (!apiKey) {
         logger.error("No API Key provided", 'oauth');
         res.statusCode = 401;
@@ -41,12 +44,12 @@ module.exports.init = function(config, logger, stats) {
             jsonBody = JSON.parse(body);
           } catch (e) {
             logger.error(err, 'verify-api-key');
-            next(err, data); 
+            return next(err, data); 
           }
 
           if (err) {
             logger.error(err, 'verify-api-key');
-            next(err, data);
+            return next(err, data);
           }
           else {
             if (jsonBody.type == 'ErrorResult') {
