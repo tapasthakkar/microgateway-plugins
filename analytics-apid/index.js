@@ -2,6 +2,7 @@
 
 var debug = require('debug')('plugin:new-analytics');
 var ApidAnalytics = require('./apidanalytics');
+const onFinished = require('on-finished');
 module.exports.init = function(config, logger, stats) {
 
   const analytics = ApidAnalytics.create(config, logger);
@@ -71,7 +72,7 @@ module.exports.init = function(config, logger, stats) {
         res.removeListener('finish', prematureErrorListener);
       }
 
-      res.on('finish', () => {
+      onFinished(res, (err) => {
         if(!res._writeToClientEnd) {
           res._writeToClientEnd = Date.now();
         }
