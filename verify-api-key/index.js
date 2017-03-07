@@ -20,7 +20,7 @@ module.exports.init = function(config, logger, stats) {
 
       if(parsedRequestUrl.query) {
         var parsedQuery = qs.parse(parsedRequestUrl.query);
-        apiKey = query.apikey;
+        apiKey = parsedQuery.apikey;
       }
       
       if (!apiKey) {
@@ -39,7 +39,6 @@ module.exports.init = function(config, logger, stats) {
           }
         }
         request.post(options, function (err, resp, body) {
-          console.log(err);
 
           if (err) {
             if(err.code == 'ECONNREFUSED') {

@@ -73,7 +73,8 @@ describe('verify-api-key plugin', () => {
     var req = {
       headers: {
         'api-key-header-missing': true
-      }
+      },
+      url: '/foo'
     }
     var res = {proxy: proxy};
     var cb = (err, result) => {
@@ -89,7 +90,8 @@ describe('verify-api-key plugin', () => {
     var req = {
       headers: {
         'x-api-key': 'REVOKED-KEY'
-      }
+      },
+      url: '/foo'
     }
     var res = {proxy: proxy};
     var cb = (err, result) => {
@@ -105,7 +107,8 @@ describe('verify-api-key plugin', () => {
     var req = {
       headers: {
         'x-api-key': 'INVALID-KEY'
-      }
+      },
+      url: '/foo'
     }
     var res = {proxy: proxy};
     var cb = (err, result) => {
@@ -121,7 +124,24 @@ describe('verify-api-key plugin', () => {
     var req = {
       headers: {
         'x-api-key': 'VALID-KEY'
-      }
+      },
+      url: '/foo'
+    }
+    var res = {proxy: proxy};
+    var cb = (err, result) => {
+      assert.equal(res.statusCode, undefined);
+      done();
+    }
+
+    plugin.onrequest.apply(null, [req, res, Buffer.alloc(5, 'a'), cb]);
+  });
+
+  it('succeeds when x-api-key is valid and in the query parameter', (done) => {
+    var req = {
+      headers: {
+        
+      },
+      url: '/foo?apikey=VALID-KEY'
     }
     var res = {proxy: proxy};
     var cb = (err, result) => {
