@@ -14,23 +14,25 @@ module.exports.init = function(config, logger, stats) {
         req._clientReceived = Date.now();
       }
         
-      prematureErrorListener = () => {
-        var record = {
-          response_status_code: res.statusCode,
-          client_received_start_timestamp: req._clientReceived,
-          client_received_end_timestamp: req._clientReceived + 1,
-          scopeId: res.proxy.scope
-        }; 
-        
-        
-        if(req.headers['x-api-key']) {
-          record.client_id = req.headers['x-api-key'];
+      onFinished(res, () => {
+        //No target response? Well that means something bad happened in EM.
+        if(!targetRes) {
+          var record = {
+            response_status_code: res.statusCode,
+            client_received_start_timestamp: req._clientReceived,
+            client_received_end_timestamp: req._clientReceived + 1,
+            scopeId: res.proxy.scope
+          }; 
+          
+          
+          if(req.headers['x-api-key']) {
+            record.client_id = req.headers['x-api-key'];
+          }
+          
+          analytics.push(record);
         }
-        
-        analytics.push(record);
-      };
+      });
 
-      res.on('finish', prematureErrorListener);
       next();
     },
     ondata_request:function(req, res, targetReq, targetRes, data, next) {
@@ -123,7 +125,6 @@ module.exports.init = function(config, logger, stats) {
       
       next();
     }
-
   };
 
 }
