@@ -101,10 +101,10 @@ ApidAnalytics.prototype.send = function(scopeId, data, cb) {
         }
 
         if(res.statusCode == 500) {
-          self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+          self.logger.error(JSON.parse(body), 'Error flushing analytics records. Retrying...', 'analytics');  
           return cb(null, scopeId, data)
         } else if(res.statusCode == 400) {
-          self.logger.error('Error flushing analytics records. Not retrying.', 'analytics');  
+          self.logger.error(JSON.parse(body), 'Error flushing analytics records. Not retrying.', 'analytics');  
           return cb(null, scopeId, []);
         } else {
           self.logger.info('Analytics records flushed successfully', 'analytics');
@@ -137,10 +137,10 @@ ApidAnalytics.prototype.sendCompressed = function(scopeId, data, cb) {
       }
 
       if(res.statusCode == 500) {
-        self.logger.error('Error flushing analytics records. Retrying...', 'analytics');  
+        self.logger.error(JSON.parse(body), 'Error flushing analytics records. Retrying...', 'analytics');  
         return cb(null, scopeId, data)
       } else if(res.statusCode == 400) {
-        self.logger.error('Error flushing analytics records. Not retrying.', 'analytics');  
+        self.logger.error(JSON.parse(body), 'Error flushing analytics records. Not retrying.', 'analytics');  
         return cb(null, scopeId, []);
       } else {
         self.logger.info('Analytics records flushed successfully', 'analytics');
