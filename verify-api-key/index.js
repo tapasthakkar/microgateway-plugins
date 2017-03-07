@@ -2,6 +2,7 @@
 var request = require('request');
 var util = require('util');
 const url = require('url');
+const qs = require('querystring');
 
 module.exports.init = function(config, logger, stats) {
   
@@ -15,6 +16,10 @@ module.exports.init = function(config, logger, stats) {
       var env= res.proxy.env;
       var base_path = res.proxy.base_path;
       var apiKey = req.headers['api-key-header'] || req.headers['x-api-key'];
+      var parsedRequestUrl = url.parse(req.url);
+      var parsedQuery = qs.parse(parsedRequestUrl.query);
+      apiKey = query.apikey;
+
       if (!apiKey) {
         logger.error("No API Key provided", 'oauth');
         res.statusCode = 401;
