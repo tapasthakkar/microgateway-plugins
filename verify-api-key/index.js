@@ -57,9 +57,9 @@ module.exports.init = function(config, logger, stats) {
             }
 
             if (jsonBody.type == 'ErrorResult') {
-              logger.error(jsonBody.result.errorCode, 'verify-api-key');
+              logger.error(jsonBody.result, jsonBody.result.reason, 'verify-api-key');
               res.statusCode = 401;
-              next (jsonBody.result.errorCode);
+              next (jsonBody.result.reason);
             }
             else if (jsonBody.result.status == 'REVOKED') {
               logger.info('API key has been revoked.', 'verify-api-key');
