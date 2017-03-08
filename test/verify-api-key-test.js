@@ -41,7 +41,7 @@ describe('verify-api-key plugin', () => {
         }
 
         if (body.key === 'INVALID-KEY') {
-          res.end(JSON.stringify({type: 'ErrorResult', result: {errorCode: "PROVIDED_ERROR_CODE"}}));
+          res.end(JSON.stringify({type: 'ErrorResult', result: {errorCode: "PROVIDED_ERROR_CODE", reason: "LOL KEY ISNT HERE"}}));
         } else if (body.key === 'REVOKED-KEY') {
           res.end(JSON.stringify({result:{status: 'REVOKED'}}))
         }
@@ -112,7 +112,7 @@ describe('verify-api-key plugin', () => {
     }
     var res = {proxy: proxy};
     var cb = (err, result) => {
-      assert.equal(err, "PROVIDED_ERROR_CODE");
+      assert.equal(err, "LOL KEY ISNT HERE");
       assert.equal(res.statusCode, 401);
       done();
     }
