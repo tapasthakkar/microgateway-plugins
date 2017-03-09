@@ -179,4 +179,45 @@ describe('verify-api-key plugin', () => {
 
     badPlugin.onrequest.apply(null, [req, res, Buffer.alloc(5, 'a'), cb]);
   });
+
+  it('will pass the url path to verifier instead of the proxy', (done) => {
+    var express = require('express')
+    var app = express()
+
+    app.post('/verifiers/apikey', function (req, res) {
+      res.setHeader("content-type", "application/json")
+
+      accumulate(req, function (err, body) {
+        assert.equal('/foo/bar/baz', body.uriPath);
+        res.end(JSON.stringify({result: {status: "valid"}}));
+      })
+    })
+
+    var srv = app.listen(9092);
+
+    var config = {
+      apidEndpoint: 'http://localhost:9092/'
+    };
+    var logger = {
+      error: (data, err) => console.error(data, err),
+      info: (data) => console.log(data)
+    };
+    var stats = {};
+
+    badPlugin = verifyApiKey.init.apply(null, [config, logger, stats]);
+
+    var req = {
+      headers: {
+      },
+      url: '/foo/bar/baz?apikey=VALID-KEY'
+    }
+    var res = {proxy: proxy};
+    var cb = (err, result) => {
+      srv.close();
+      done();
+    }
+
+    badPlugin.onrequest.apply(null, [req, res, Buffer.alloc(5, 'a'), cb]);
+
+  });
 })
