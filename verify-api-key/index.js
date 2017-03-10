@@ -34,7 +34,7 @@ module.exports.init = function(config, logger, stats) {
           form: {
             key: apiKey,
             scopeuuid: scope,
-            uriPath: base_path,
+            uriPath: parsedRequestUrl.pathname,
             action: 'verify'
           }
         }
