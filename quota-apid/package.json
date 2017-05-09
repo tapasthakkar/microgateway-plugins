@@ -1,0 +1,7 @@
+{
+  "name": "apid-quota",
+  "version": "1.0.0",
+  "description": "apid plugin for quota",
+  "main": "index.js",
+  "license": "MIT"
+}

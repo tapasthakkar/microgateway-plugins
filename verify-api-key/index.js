@@ -68,7 +68,18 @@ module.exports.init = function(config, logger, stats) {
             }
             else {
               logger.info('API key has been verified.', 'verify-api-key');
-              next(null, data);
+
+              var quotaData = {
+                data: {
+                    orgName: jsonBody.result.org,
+                    appName: jsonBody.result.appName,
+                    quota: jsonBody.result.Quota,
+                    quotaTimeUnit: jsonBody.result.QuotaTimeUnit,
+                    quotaInterval: jsonBody.result.QuotaInterval
+                  }
+                }
+                req.quota = quotaData;
+              next(null,data);
             }
           }
         });
