@@ -25,7 +25,7 @@ module.exports.init = function(config, logger, stats) {
                     url: apidUrl,
                     body:JSON.stringify( {
                         'edgeOrgID': reqQuotaData.data.orgName,
-                        'id': reqQuotaData.data.appName,
+                        'id': reqQuotaData.data.appId,
                         'interval': reqQuotaData.data.quotaInterval,
                         'timeUnit': reqQuotaData.data.quotaTimeUnit,
                         'maxCount': parseInt(reqQuotaData.data.quota),

@@ -72,10 +72,10 @@ module.exports.init = function(config, logger, stats) {
               var quotaData = {
                 data: {
                     orgName: jsonBody.result.org,
-                    appName: jsonBody.result.appName,
-                    quota: jsonBody.result.Quota,
-                    quotaTimeUnit: jsonBody.result.QuotaTimeUnit,
-                    quotaInterval: jsonBody.result.QuotaInterval
+                    appId: "edgemicro@@@" + jsonBody.result.appId,
+                    quota: jsonBody.result.quota,
+                    quotaTimeUnit: jsonBody.result.quotaTimeUnit,
+                    quotaInterval: jsonBody.result.quotaInterval
                   }
                 }
                 req.quota = quotaData;
