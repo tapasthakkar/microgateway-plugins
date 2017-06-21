@@ -34,6 +34,8 @@ module.exports.init = function (config, logger, stats) {
     var apikey_only = config['allowAPIKeyOnly'] || false;
     //
     var apiKey;
+    //set the clock tolerance
+    acceptField.gracePeriod = config['clockTolerance'] || 120;
 
     //support for enabling oauth or api key only
     if (oauth_only) {
