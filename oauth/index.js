@@ -18,6 +18,8 @@ const acceptAlg = ['RS256'];
 var acceptField = {};
 acceptField.alg = acceptAlg;
 
+var productOnly;
+
 module.exports.init = function (config, logger, stats) {
   
   var apiKeyCache = {};
@@ -34,9 +36,9 @@ module.exports.init = function (config, logger, stats) {
     var apikey_only = config['allowAPIKeyOnly'] || false;
     //
     var apiKey;
-    //set the clock tolerance
-    acceptField.gracePeriod = config['clockTolerance'] || 120;
-
+    //this flag will enable check against resource paths only
+    productOnly = config['productOnly'] || false;
+    //
     //support for enabling oauth or api key only
     if (oauth_only) {
       if (!req.headers['authorization']) {
@@ -208,17 +210,25 @@ module.exports.init = function (config, logger, stats) {
 // from the product name(s) on the token, find the corresponding proxy
 // then check if that proxy is one of the authorized proxies in bootstrap
 const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAuthorized(config, urlPath, proxy, decodedToken) {
-
+  
   var parsedUrl = url.parse(urlPath);
+  //
+  debug('product only: '+ productOnly);
+  //
   urlPath = parsedUrl.pathname;
   if (!decodedToken.api_product_list) { debug('no api product list'); return false; }
 
   return decodedToken.api_product_list.some(function (product) {
 
     const validProxyNames = config.product_to_proxy[product];
-    if (!validProxyNames) { debug('no proxies found for product'); return false; }
+
+    if (!productOnly) {
+      if (!validProxyNames) { debug('no proxies found for product'); return false; }      
+    } 
+
 
     const apiproxies = config.product_to_api_resource[product];
+
     var matchesProxyRules = false;
     if(apiproxies && apiproxies.length){
       apiproxies.forEach(function (tempApiProxy) {
@@ -254,10 +264,13 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
     }else{
       matchesProxyRules = true
     }
-
+    
+    debug("matches proxy rules: " + matchesProxyRules);
     //add pattern matching here
-
-    return matchesProxyRules &&  validProxyNames.indexOf(proxy.name) >= 0;
+    if (!productOnly)
+      return matchesProxyRules &&  validProxyNames.indexOf(proxy.name) >= 0;
+    else 
+      return matchesProxyRules;
   });
 }
 
