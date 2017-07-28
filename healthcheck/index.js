@@ -10,7 +10,7 @@ module.exports.init = function(config, logger, stats) {
    onrequest: function(req, res, next) {
      var healthcheck_url = config['healthcheck_url'] ||  HEALTHCHECK_URL
       if(healthcheck_url == req.url) {
-        var statusCode = (this.toobusy() ? 503 : 200)
+        var statusCode = (toobusy() ? 503 : 200)
         debug(statusCode)
         var healthInfo = {
           memoryUsage: process.memoryUsage(),
