@@ -1,4 +1,6 @@
 'use strict'
+var debug = require('debug')('plugin:cloud-foundry-route-service');
+var https = require('https');
 /*
  * Copyright 2016 Apigee Corporation
  *
@@ -15,6 +17,7 @@
  * limitations under the License.
  */
 
+var pathOnly = false;
 
 /**
  * Changes target host/path according to Cloud Foundry "magic header".
@@ -45,19 +48,35 @@ function retarget (req, res, next) {
   const cfHostname = cfurl.slice(h, p)
   const cfPath = cfurl.slice(p) || '/'
 
-  // console.log('x-cf-forwarded-url', cfurl, h, p)
-  // console.log(req.targetHostname, '->', cfHostname)
-  // console.log(req.targetPath, '->', cfPath)
+  debug('x-cf-forwarded-url: ' + cfurl);
+  debug('old targetHostname: '+req.targetHostname);
+  debug('old targetPath: ' + req.targetPath);
 
-  if (cfHostname) {
+  if (cfHostname && !pathOnly) {
     req.targetHostname = cfHostname
   }
   req.targetPath = cfPath
+
+  debug('new targetHostname: '+req.targetHostname);
+  debug('new targetPath: ' + req.targetPath);
 
   next()
 }
 
 module.exports.init = function (config, logger, stats) {
+  //this variable will allow the override of only the targetPath
+  //why is this useful?: it is possible for a cf app to have multiple
+  //routes (ex: an internal route available only from within the 
+  //corp network vs. an external route available from the internet). 
+  //the hostname that is set during the route-bind-services cmd maybe 
+  //external route. however, MG need not use that route the request.
+  //it can optimize and use an internal route (which the developer can 
+  //specify in as the target endpoint in the API Proxy). In short, 
+  //external consumers will still access the app from the external route
+  //but instead of MG forwardinf the request back to the external route, 
+  //it will use an internal route (if the proxy endpoint had such a target) 
+  pathOnly = config['pathOnly'] || false;
+
   return {
     onrequest: retarget
   }

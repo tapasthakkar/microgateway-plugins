@@ -1,0 +1,16 @@
+{
+  "name": "bauth",
+  "version": "1.0.0",
+  "description": "Sample plugin extract Basic Auth credentials",
+  "main": "index.js",
+  "author": "Nandan Sridhar <nandanks@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "debug": "^2.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apigee/microgateway-plugins.git"
+  }
+}
+

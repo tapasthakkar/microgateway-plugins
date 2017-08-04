@@ -2,7 +2,8 @@
 
 var debug = require('debug')('plugin:oauth');
 var url = require('url');
-var jwt = require('jsonwebtoken');
+var rs = require('jsrsasign');
+var JWS = rs.jws.JWS;
 var requestLib = require('request');
 var _ = require('lodash');
 
@@ -12,10 +13,18 @@ const SUPPORTED_DOUBLE_ASTERIK_PATTERN = "**";
 const SUPPORTED_SINGLE_ASTERIK_PATTERN = "*";
 const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";
 
-module.exports.init = function (config, logger, stats) {
+const acceptAlg = ['RS256'];
 
+var acceptField = {};
+acceptField.alg = acceptAlg;
+
+var productOnly;
+
+module.exports.init = function (config, logger, stats) {
+  
   var apiKeyCache = {};
   var request = config.request ? requestLib.defaults(config.request) : requestLib;
+  var keys = config.jwk_keys ? JSON.parse(config.jwk_keys) : null;
 
   var middleware = function (req, res, next) {
 
@@ -27,7 +36,9 @@ module.exports.init = function (config, logger, stats) {
     var apikey_only = config['allowAPIKeyOnly'] || false;
     //
     var apiKey;
-
+    //this flag will enable check against resource paths only
+    productOnly = config['productOnly'] || false;
+    //
     //support for enabling oauth or api key only
     if (oauth_only) {
       if (!req.headers['authorization']) {
@@ -118,37 +129,34 @@ module.exports.init = function (config, logger, stats) {
   }
 
   var verify = function (token, config, logger, stats, middleware, req, res, next, apiKey) {
-    var options = {
-      algorithms: ['RS256'],
-      ignoreExpiration: false,
-      audience: undefined,
-      issuer: undefined
-    };
 
-    jwt.verify(token && token.token ? token.token : token, config.public_key, options, function (err, decodedToken) {
-
-      if (err) {
-
-        if (config.allowInvalidAuthorization) {
-
-          console.warn('ignoring err', err);
-          return next();
-
-        } else {
-
-          if (err.name === 'TokenExpiredError') {
-            debug('Token expired error');
-            return sendError(req, res, next, logger, stats, 'access_denied');
-          }
-
-          // todo: check other properties and/or give client more info?
-          debug('invalid token');
-          return sendError(req, res, next, logger, stats, 'invalid_token');
+    var isValid = false;
+    var decodedToken = JWS.parse(token && token.token ? token.token : token);    
+    if (keys) {
+      var i = 0;
+      debug('jwk kid ' + decodedToken.headerObj.kid);
+      for (; i<keys.length;i++) {
+        if (keys.kid == decodedToken.headerObj.kid) {
+          break;
         }
       }
-
-      authorize(req, res, next, logger, stats, decodedToken, apiKey);
-    });
+      var publickey = rs.KEYUTIL.getKey(keys.keys[i]);
+      var pem = rs.KEYUTIL.getPEM(publickey);
+      isValid = JWS.verifyJWT(token && token.token ? token.token : token, pem, acceptField);      
+    } else {
+      isValid = JWS.verifyJWT(token && token.token ? token.token : token, config.public_key, acceptField);
+    }
+    if (!isValid) {
+        if (config.allowInvalidAuthorization) {
+          console.warn('ignoring err', err);
+          return next();
+        } else {
+          debug('invalid token');
+          return sendError(req, res, next, logger, stats, 'invalid_token');
+        }      
+    } else {
+      authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+    }
   };
 
   return {
@@ -202,17 +210,25 @@ module.exports.init = function (config, logger, stats) {
 // from the product name(s) on the token, find the corresponding proxy
 // then check if that proxy is one of the authorized proxies in bootstrap
 const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAuthorized(config, urlPath, proxy, decodedToken) {
-
+  
   var parsedUrl = url.parse(urlPath);
+  //
+  debug('product only: '+ productOnly);
+  //
   urlPath = parsedUrl.pathname;
   if (!decodedToken.api_product_list) { debug('no api product list'); return false; }
 
   return decodedToken.api_product_list.some(function (product) {
 
     const validProxyNames = config.product_to_proxy[product];
-    if (!validProxyNames) { debug('no proxies found for product'); return false; }
+
+    if (!productOnly) {
+      if (!validProxyNames) { debug('no proxies found for product'); return false; }      
+    } 
+
 
     const apiproxies = config.product_to_api_resource[product];
+
     var matchesProxyRules = false;
     if(apiproxies && apiproxies.length){
       apiproxies.forEach(function (tempApiProxy) {
@@ -248,10 +264,13 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
     }else{
       matchesProxyRules = true
     }
-
+    
+    debug("matches proxy rules: " + matchesProxyRules);
     //add pattern matching here
-
-    return matchesProxyRules &&  validProxyNames.indexOf(proxy.name) >= 0;
+    if (!productOnly)
+      return matchesProxyRules &&  validProxyNames.indexOf(proxy.name) >= 0;
+    else 
+      return matchesProxyRules;
   });
 }
 

@@ -14,5 +14,6 @@ module.exports = {
   eurekaclient:require('./eurekaclient'),
   json2xml: require('./json2xml'),
   healthcheck: require('./healthcheck'),
-  'cloud-foundry-route-service': require('./cloud-foundry-route-service')
+  'cloud-foundry-route-service': require('./cloud-foundry-route-service'),
+  bauth: require('./bauth')
 }
