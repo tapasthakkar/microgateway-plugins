@@ -1,6 +1,6 @@
 {
   "name": "microgateway-plugins",
-  "version": "2.3.10-beta",
+  "version": "2.3.11-beta",
   "description": "Plugins for Apige Edge Microgateway",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "volos-quota-memory": "^0.11.0",
     "volos-spikearrest-memory": "^0.10.0",
     "xml2js": "^0.4.17",
-    "jsrsasign":"^7.2.0"
+    "jsrsasign": "^7.2.0"
   },
   "devDependencies": {
     "js-yaml": "^3.4.2",
