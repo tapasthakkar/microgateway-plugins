@@ -22,6 +22,7 @@ module.exports.init = function(config, logger, stats) {
       return;
     }     
 
+    config[productName].request = config.request;
     var quota = Quota.create(config[productName]);
     quotas[productName] = quota.connectMiddleware().apply(options);
     debug('created quota for', productName);
