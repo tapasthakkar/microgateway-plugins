@@ -24,7 +24,11 @@ module.exports.init = function(config, logger, stats) {
       record.client_ip = xffHeader;
     }
 
-    cb(null, record);
+    try {
+        cb(null, record);
+    } catch (e) {
+      logger.error("Error encountered processing Apigee analytics.  Allowing request processing to continue", e);
+    }
   };
 
   var analytics = volos.create(config);
