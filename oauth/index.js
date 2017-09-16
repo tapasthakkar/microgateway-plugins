@@ -21,7 +21,7 @@ acceptField.alg = acceptAlg;
 var productOnly;
 
 module.exports.init = function (config, logger, stats) {
-  
+
   var apiKeyCache = {};
   var request = config.request ? requestLib.defaults(config.request) : requestLib;
   var keys = config.jwk_keys ? JSON.parse(config.jwk_keys) : null;
@@ -55,8 +55,8 @@ module.exports.init = function (config, logger, stats) {
     else if (apikey_only) {
       if (!req.headers[apiKeyHeaderName]) {
         debug('missing api key');
-        return sendError(req, res, next, logger, stats, 'invalid_auth', 'Missing API Key header');        
-      } 
+        return sendError(req, res, next, logger, stats, 'invalid_auth', 'Missing API Key header');
+      }
     }
 
     //leaving rest of the code same to ensure backward compatibility
@@ -77,7 +77,7 @@ module.exports.init = function (config, logger, stats) {
         if (!header || header.length < 2) {
           debug('Invalid Authorization Header');
           return sendError(req, res, next, logger, stats, 'invalid_request', 'Invalid Authorization header');
-        }        
+        }
       }
 
       if (!keepAuthHeader) {
@@ -86,7 +86,7 @@ module.exports.init = function (config, logger, stats) {
 
       var token = '';
       if (header) {
-        token = header[1];        
+        token = header[1];
       }
       verify(token, config, logger, stats, middleware, req, res, next);
     }
@@ -131,7 +131,7 @@ module.exports.init = function (config, logger, stats) {
   var verify = function (token, config, logger, stats, middleware, req, res, next, apiKey) {
 
     var isValid = false;
-    var decodedToken = JWS.parse(token && token.token ? token.token : token);    
+    var decodedToken = JWS.parse(token && token.token ? token.token : token);
     if (keys) {
       var i = 0;
       debug('jwk kid ' + decodedToken.headerObj.kid);
@@ -142,7 +142,7 @@ module.exports.init = function (config, logger, stats) {
       }
       var publickey = rs.KEYUTIL.getKey(keys.keys[i]);
       var pem = rs.KEYUTIL.getPEM(publickey);
-      isValid = JWS.verifyJWT(token && token.token ? token.token : token, pem, acceptField);      
+      isValid = JWS.verifyJWT(token && token.token ? token.token : token, pem, acceptField);
     } else {
       isValid = JWS.verifyJWT(token && token.token ? token.token : token, config.public_key, acceptField);
     }
@@ -153,7 +153,7 @@ module.exports.init = function (config, logger, stats) {
         } else {
           debug('invalid token');
           return sendError(req, res, next, logger, stats, 'invalid_token');
-        }      
+        }
     } else {
       authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
     }
@@ -210,12 +210,12 @@ module.exports.init = function (config, logger, stats) {
 // from the product name(s) on the token, find the corresponding proxy
 // then check if that proxy is one of the authorized proxies in bootstrap
 const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAuthorized(config, urlPath, proxy, decodedToken) {
-  
+
   var parsedUrl = url.parse(urlPath);
   //
   debug('product only: '+ productOnly);
   //
-  urlPath = parsedUrl.pathname;
+  
   if (!decodedToken.api_product_list) { debug('no api product list'); return false; }
 
   return decodedToken.api_product_list.some(function (product) {
@@ -223,8 +223,8 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
     const validProxyNames = config.product_to_proxy[product];
 
     if (!productOnly) {
-      if (!validProxyNames) { debug('no proxies found for product'); return false; }      
-    } 
+      if (!validProxyNames) { debug('no proxies found for product'); return false; }
+    }
 
 
     const apiproxies = config.product_to_api_resource[product];
@@ -237,7 +237,8 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
             debug('found matching proxy rule');
             return;
           }
-          
+
+          urlPath = parsedUrl.pathname;
           const apiproxy = tempApiProxy.includes(proxy.base_path)
             ? tempApiProxy
             : proxy.base_path + (tempApiProxy.startsWith("/") ? "" : "/") +  tempApiProxy
@@ -264,12 +265,12 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
     }else{
       matchesProxyRules = true
     }
-    
+
     debug("matches proxy rules: " + matchesProxyRules);
     //add pattern matching here
     if (!productOnly)
       return matchesProxyRules &&  validProxyNames.indexOf(proxy.name) >= 0;
-    else 
+    else
       return matchesProxyRules;
   });
 }
