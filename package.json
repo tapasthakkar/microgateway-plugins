@@ -10,8 +10,11 @@
     "async": "^1.4.2",
     "debug": "^2.2.0",
     "eureka-js-client": "^4.3.0",
+    "jade": "^1.11.0",
     "js2xmlparser": "^2.0.2",
+    "jsrsasign": "^7.2.0",
     "lodash": "^3.10.1",
+    "minimatch": "^3.0.4",
     "request": "^2.65.0",
     "toobusy-js": "^0.5.1",
     "volos-analytics-apigee": "^0.4.0",
@@ -19,8 +22,7 @@
     "volos-quota-apigee": "^0.13.0",
     "volos-quota-memory": "^0.11.0",
     "volos-spikearrest-memory": "^0.10.0",
-    "xml2js": "^0.4.17",
-    "jsrsasign": "^7.2.0"
+    "xml2js": "^0.4.17"
   },
   "devDependencies": {
     "js-yaml": "^3.4.2",
