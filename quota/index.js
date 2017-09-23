@@ -16,7 +16,7 @@ module.exports.init = function(config, logger, stats) {
 
   Object.keys(config).forEach(function(productName) {
     var product = config[productName];
-    if (!product.uri && !product.key && !product.secret && !product.allow && !product.interval) {
+    if (!product.uri && !product.key && !product.secret && !product.allow && !product.interval || product.interval === "null") {
       // skip non-quota config
       console.log('Not enough info for configuring quota');
       return;
