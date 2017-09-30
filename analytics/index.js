@@ -24,6 +24,12 @@ module.exports.init = function(config, logger, stats) {
       record.client_ip = xffHeader;
     }
 
+    record.client_received_start_timestamp = req.headers['client_received_start_timestamp'];
+    record.client_received_end_timestamp = req.headers['client_received_end_timestamp'];
+
+    record.target_received_start_timestamp = req.headers['target_received_start_timestamp'];
+    record.target_received_end_timestamp = req.headers['target_received_end_timestamp'];
+
     try {
         cb(null, record);
     } catch (e) {
@@ -39,7 +45,27 @@ module.exports.init = function(config, logger, stats) {
     testprobe: function() { return analytics },
 
     onrequest: function(req, res, next) {
+      var timestamp = Date.now();
+      req.headers['client_received_start_timestamp'] = timestamp;
       middleware(req, res, next);
+    },
+
+    onend_request: function(req, res, next) {
+      var timestamp = Date.now();
+      req.headers['client_received_end_timestamp'] = timestamp;
+      next();
+    },
+
+    onresponse: function(req, res, next) {
+      var timestamp = Date.now();
+      req.headers['target_received_start_timestamp'] = timestamp;
+      next();
+    },
+
+    onend_response: function (req, res, next) {
+      var timestamp = Date.now();
+      req.headers['target_received_end_timestamp'] = timestamp;
+      next();
     }
 
   };
