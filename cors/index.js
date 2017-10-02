@@ -5,7 +5,7 @@ module.exports.init = function(config, logger, stats) {
   return {
   	onrequest: function(req, res, next) {
 	  if(req.method == 'OPTIONS') {
-	    debug('settings cors headers);
+	    debug('settings cors headers');
 	    res.setHeader('Access-Control-Allow-Origin', req.headers['origin']);
 	    res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, PATCH, OPTIONS');
        	    res.setHeader('Access-Control-Allow-Max-Age', '3628800');
