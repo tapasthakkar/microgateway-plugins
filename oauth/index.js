@@ -31,6 +31,9 @@ module.exports.init = function (config, logger, stats) {
     var authHeaderName = config['authorization-header'] ? config['authorization-header'] : 'authorization';
     var apiKeyHeaderName = config['api-key-header'] ? config['api-key-header'] : 'x-api-key';
     var keepAuthHeader = config['keep-authorization-header'] || false;
+    //set grace period
+    var gracePeriod = config['gracePeriod'] || 0;
+    acceptField.gracePeriod = gracePeriod;
     //support for enabling oauth or api key only
     var oauth_only = config['allowOAuthOnly'] || false;
     var apikey_only = config['allowAPIKeyOnly'] || false;
