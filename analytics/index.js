@@ -27,6 +27,9 @@ module.exports.init = function(config, logger, stats) {
     record.client_received_start_timestamp = req.headers['client_received_start_timestamp'];
     record.client_received_end_timestamp = req.headers['client_received_end_timestamp'];
 
+    record.target_sent_start_timestamp = req.headers['target_sent_start_timestamp'];
+    record.target_sent_end_timestamp = req.headers['target_sent_end_timestamp'] + 1;//tmp hack
+
     record.target_received_start_timestamp = req.headers['target_received_start_timestamp'];
     record.target_received_end_timestamp = req.headers['target_received_end_timestamp'];
 
