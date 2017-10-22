@@ -58,7 +58,7 @@ module.exports.init = function (config, logger, stats) {
     else if (apikey_only) {
       if (!req.headers[apiKeyHeaderName]) {
         debug('missing api key');
-        return sendError(req, res, next, logger, stats, 'invalid_auth', 'Missing API Key header');
+        return sendError(req, res, next, logger, stats, 'invalid_authorization', 'Missing API Key header');
       }
     }
 
