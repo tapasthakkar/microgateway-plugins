@@ -44,11 +44,11 @@ module.exports.init = function (config, logger, stats) {
     //
     //support for enabling oauth or api key only
     if (oauth_only) {
-      if (!req.headers['authorization']) {
+      if (!req.headers[authHeaderName]) {
         debug('missing_authorization');
         return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');
       } else {
-        var header = authHeaderRegex.exec(req.headers['authorization']);
+        var header = authHeaderRegex.exec(req.headers[authHeaderName]);
         if (!header || header.length < 2) {
           debug('Invalid Authorization Header');
           return sendError(req, res, next, logger, stats, 'invalid_request', 'Invalid Authorization header');
