@@ -45,8 +45,12 @@ module.exports.init = function (config, logger, stats) {
     //support for enabling oauth or api key only
     if (oauth_only) {
       if (!req.headers[authHeaderName]) {
-        debug('missing_authorization');
-        return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');
+        if (config.allowNoAuthorization) {
+          return next();
+	} else {
+	  debug('missing_authorization');
+	  return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');			
+	}
       } else {
         var header = authHeaderRegex.exec(req.headers[authHeaderName]);
         if (!header || header.length < 2) {
@@ -58,7 +62,7 @@ module.exports.init = function (config, logger, stats) {
     else if (apikey_only) {
       if (!req.headers[apiKeyHeaderName]) {
         debug('missing api key');
-        return sendError(req, res, next, logger, stats, 'invalid_authorization', 'Missing API Key header');
+        return sendError(req, res, next, logger, stats, 'invalid_authorization', 'Missing API Key header');			
       }
     }
 
