@@ -19,6 +19,7 @@ var acceptField = {};
 acceptField.alg = acceptAlg;
 
 var productOnly;
+var cacheKey = false;
 
 module.exports.init = function (config, logger, stats) {
 
@@ -31,6 +32,7 @@ module.exports.init = function (config, logger, stats) {
     var authHeaderName = config['authorization-header'] ? config['authorization-header'] : 'authorization';
     var apiKeyHeaderName = config['api-key-header'] ? config['api-key-header'] : 'x-api-key';
     var keepAuthHeader = config['keep-authorization-header'] || false;
+    cacheKey = config['cacheKey'] || false;
     //set grace period
     var gracePeriod = config['gracePeriod'] || 0;
     acceptField.gracePeriod = gracePeriod;
@@ -101,7 +103,7 @@ module.exports.init = function (config, logger, stats) {
 
   var exchangeApiKeyForToken = function (req, res, next, config, logger, stats, middleware, apiKey) {
     var cacheControl = req.headers['cache-control'];
-    if (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0)) { // caching is allowed
+    if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
       var token = apiKeyCache[apiKey];
       if (token) {
         if (Date.now() / 1000 < token.exp) { // not expired yet (token expiration is in seconds)
