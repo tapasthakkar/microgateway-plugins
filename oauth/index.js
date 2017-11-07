@@ -19,6 +19,7 @@ var acceptField = {};
 acceptField.alg = acceptAlg;
 
 var productOnly;
+var cacheKey = false;
 
 module.exports.init = function (config, logger, stats) {
 
@@ -31,6 +32,7 @@ module.exports.init = function (config, logger, stats) {
     var authHeaderName = config['authorization-header'] ? config['authorization-header'] : 'authorization';
     var apiKeyHeaderName = config['api-key-header'] ? config['api-key-header'] : 'x-api-key';
     var keepAuthHeader = config['keep-authorization-header'] || false;
+    cacheKey = config['cacheKey'] || false;
     //set grace period
     var gracePeriod = config['gracePeriod'] || 0;
     acceptField.gracePeriod = gracePeriod;
@@ -45,8 +47,12 @@ module.exports.init = function (config, logger, stats) {
     //support for enabling oauth or api key only
     if (oauth_only) {
       if (!req.headers[authHeaderName]) {
-        debug('missing_authorization');
-        return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');
+        if (config.allowNoAuthorization) {
+          return next();
+	} else {
+	  debug('missing_authorization');
+	  return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');			
+	}
       } else {
         var header = authHeaderRegex.exec(req.headers[authHeaderName]);
         if (!header || header.length < 2) {
@@ -58,7 +64,7 @@ module.exports.init = function (config, logger, stats) {
     else if (apikey_only) {
       if (!req.headers[apiKeyHeaderName]) {
         debug('missing api key');
-        return sendError(req, res, next, logger, stats, 'invalid_authorization', 'Missing API Key header');
+        return sendError(req, res, next, logger, stats, 'invalid_authorization', 'Missing API Key header');			
       }
     }
 
@@ -97,7 +103,7 @@ module.exports.init = function (config, logger, stats) {
 
   var exchangeApiKeyForToken = function (req, res, next, config, logger, stats, middleware, apiKey) {
     var cacheControl = req.headers['cache-control'];
-    if (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0)) { // caching is allowed
+    if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
       var token = apiKeyCache[apiKey];
       if (token) {
         if (Date.now() / 1000 < token.exp) { // not expired yet (token expiration is in seconds)
