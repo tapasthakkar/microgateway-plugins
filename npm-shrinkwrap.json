@@ -748,6 +748,15 @@
       "resolved": "https://registry.npmjs.org/lru-cache-plus/-/lru-cache-plus-2.5.0.tgz",
       "integrity": "sha1-wEID+w5x/iDCe28aRkVmtyp2wZw="
     },
+    "lynx": {
+      "version": "0.2.0",
+      "resolved": "https://registry.npmjs.org/lynx/-/lynx-0.2.0.tgz",
+      "integrity": "sha1-eeZnRTDaQYPoeVO9aGFx4HDaULk=",
+      "requires": {
+        "mersenne": "0.0.4",
+        "statsd-parser": "0.0.4"
+      }
+    },
     "md5": {
       "version": "2.2.1",
       "resolved": "https://registry.npmjs.org/md5/-/md5-2.2.1.tgz",
@@ -763,6 +772,11 @@
       "version": "1.1.1",
       "resolved": "https://registry.npmjs.org/memored/-/memored-1.1.1.tgz",
       "integrity": "sha1-fIHATuCEyVbVRuyNuTdc52T150Y="
+    },
+    "mersenne": {
+      "version": "0.0.4",
+      "resolved": "https://registry.npmjs.org/mersenne/-/mersenne-0.0.4.tgz",
+      "integrity": "sha1-QB/ex+whzbngPNPTAhOY2iGycIU="
     },
     "methods": {
       "version": "1.1.2",
@@ -1064,6 +1078,11 @@
         "jsbn": "0.1.1",
         "tweetnacl": "0.14.5"
       }
+    },
+    "statsd-parser": {
+      "version": "0.0.4",
+      "resolved": "https://registry.npmjs.org/statsd-parser/-/statsd-parser-0.0.4.tgz",
+      "integrity": "sha1-y9JDlTzELv/VSLXSI4jtaJ7GOb0="
     },
     "string_decoder": {
       "version": "0.10.31",

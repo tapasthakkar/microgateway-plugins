@@ -14,6 +14,7 @@
     "js2xmlparser": "^2.0.2",
     "jsrsasign": "^7.2.0",
     "lodash": "^3.10.1",
+    "lynx": "^0.2.0",
     "memored": "^1.1.1",
     "minimatch": "^3.0.4",
     "request": "^2.65.0",
