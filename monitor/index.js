@@ -4,17 +4,11 @@
  */
 
 var debug = require('debug')('plugin:monitor');
-var cm = require('volos-cache-memory');
+var cache = require('memored');
 const lynx = require('lynx');
 const os = require('os');
 
 module.exports.init = function(config, logger, stats) {
-
-    var cachename = 'monitor' + Math.floor(Math.random() * 100) + 1; //to ensure there is a unique cache per worker
-    var cache = cm.create(cachename, {
-        ttl: 10000
-    });//compute transactions per second
-    cache.setEncoding('utf8');
 
     var host = config.host || 'localhost';
     var port = config.port || 8125;
@@ -42,64 +36,64 @@ module.exports.init = function(config, logger, stats) {
     function setGauge(statusCode) {
       var tmp = 0;
       if (statusCode >= 200 && statusCode < 300) { 
-        cache.get(sc2xx, function(err, value) {
+        cache.read(sc2xx, function(err, value) {
           if (value) {
             tmp = parseInt(value);
             tmp ++;
-            cache.set(sc2xx, tmp.toString());
+            cache.store(sc2xx, tmp.toString());
             client.gauge(key + '_'+sc2xx, tmp);
           } else {
-            cache.set(sc2xx, '1');
+            cache.store(sc2xx, '1');
             client.gauge(key + '_'+sc2xx, 1);
           }
           //debug('statusCode2xx ' + tmp);
         });
       } else if (statusCode >=300 && statusCode < 400) {
-        cache.get(sc3xx, function(err, value) {
+        cache.read(sc3xx, function(err, value) {
           if (value) {
             tmp = parseInt(value);
             tmp ++;
-            cache.set(sc3xx, tmp.toString());
+            cache.store(sc3xx, tmp.toString());
             client.gauge(key + '_'+sc3xx, tmp);
           } else {
-            cache.set(sc3xx, 1);
+            cache.store(sc3xx, 1);
             client.gauge(key + '_'+sc3xx, 1);
           }
           //debug('statusCode3xx ' + tmp);
         });
       } else if (statusCode >=400 && statusCode < 500) {
-        cache.get(sc4xx, function(err, value) {
+        cache.read(sc4xx, function(err, value) {
           if (value) {
             tmp = parseInt(value);
             tmp ++;
-            cache.set(sc4xx, tmp.toString());
+            cache.store(sc4xx, tmp.toString());
             client.gauge(key + '_'+sc4xx, tmp);
           } else {
-            cache.set(sc4xx, 1);
+            cache.store(sc4xx, 1);
             client.gauge(key + '_'+sc4xx, 1);
           }
           //debug('statusCode4xx ' + tmp);
         });
       } else if (statusCode >=500 && statusCode < 600) {
-        cache.get(sc5xx, function(err, value) {
+        cache.read(sc5xx, function(err, value) {
           if (value) {
             tmp = parseInt(value);
             tmp ++;
-            cache.set(sc5xx, tmp.toString());
+            cache.store(sc5xx, tmp.toString());
             client.gauge(key + '_'+sc5xx, tmp);
           } else {
-            cache.set(sc5xx, 1);
+            cache.store(sc5xx, 1);
             client.gauge(key + '_'+sc5xx, 1);
           }
           //debug('statusCode5xx ' + value);
         });
       } else {
-        cache.get(scNA, function(err, value) {
+        cache.read(scNA, function(err, value) {
           if (value) {
-            cache.set(scNA, value ++);
+            cache.store(scNA, value ++);
             client.gauge(key + '_'+scNA, value);
           } else {
-            cache.set(scNA, 1);
+            cache.store(scNA, 1);
             client.gauge(key + '_'+scNA, 1);
           }
           //debug('statusCodeNA ' + tmp);
@@ -108,12 +102,12 @@ module.exports.init = function(config, logger, stats) {
     }
     
     function clearCache() {
-      cache.set(sc2xx,'0');
-      cache.set(sc3xx,'0');
-      cache.set(sc4xx,'0');
-      cache.set(sc5xx,'0');
-      cache.set(scNA,'0');    
-      setTimeout(clearCache, 10000);
+      cache.store(sc2xx,'1');client.gauge(key + '_'+sc2xx, 0);
+      cache.store(sc3xx,'0');client.gauge(key + '_'+sc3xx, 0);
+      cache.store(sc4xx,'0');client.gauge(key + '_'+sc4xx, 0);
+      cache.store(sc5xx,'0');client.gauge(key + '_'+sc5xx, 0);
+      cache.store(scNA,'0');client.gauge(key + '_'+scNA, 0);    
+      setTimeout(clearCache, 30000);
     }
 
     function sendEvent(statusCode) {
