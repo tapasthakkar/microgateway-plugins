@@ -198,7 +198,7 @@ module.exports.init = function (config, logger, stats) {
 
       if (apiKey) {
         var cacheControl = req.headers['cache-control'];
-        if (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0)) { // caching is allowed
+        if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
           // default to now (in seconds) + 30m if not set
           decodedToken.exp = decodedToken.exp || +(((Date.now() / 1000) + 1800).toFixed(0));
           apiKeyCache[apiKey] = decodedToken;
