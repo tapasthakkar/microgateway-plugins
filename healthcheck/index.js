@@ -26,7 +26,9 @@ module.exports.init = function(config, logger, stats) {
           .then(function(isOpen){
             if (isOpen){
               statusCode = 500
-              healthInfo.decoratorError = 'Application is not running on specified applicaiton port: ' + port
+              var errorDescription = 'Application is not running on specified applicaiton port: ' + port
+              healthInfo.decoratorError = errorDescription
+              debug(errorDescription)
               debug(statusCode)
             }
             res.writeHead(statusCode, { 'Content-Type': 'application/json' })
