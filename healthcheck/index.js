@@ -2,6 +2,7 @@
 
 var toobusy = require('toobusy-js');
 var debug = require('debug')('gateway:healthcheck');
+var portastic = require('portastic')
 
 const HEALTHCHECK_URL = '/healthcheck';
 
@@ -18,9 +19,26 @@ module.exports.init = function(config, logger, stats) {
           uptime: process.uptime(),
           pid: process.pid
         }
-        res.writeHead(statusCode, { 'Content-Type': 'application/json' })
-        res.write(JSON.stringify(healthInfo))
-        res.end()
+        //Check for cloud foundry healthcheck
+        if(req.targetPort != '' && process.env.EDGEMICRO_DECORATOR){
+          var port = req.targetPort
+          portastic.test(port)
+          .then(function(isOpen){
+            if (isOpen){
+              statusCode = 500
+              healthInfo.decoratorError = 'Application is not running on specified applicaiton port: ' + port
+              debug(statusCode)
+            }
+            res.writeHead(statusCode, { 'Content-Type': 'application/json' })
+            res.write(JSON.stringify(healthInfo))
+            res.end()
+          });
+        }
+        else{
+          res.writeHead(statusCode, { 'Content-Type': 'application/json' })
+          res.write(JSON.stringify(healthInfo))
+          res.end()
+        }
       }
       else {
         next()
