@@ -132,6 +132,7 @@ module.exports.init = function(config, logger, stats) {
         };
         if (config.agentOptions) {
             if (config.agentOptions.requestCert) {
+                api_key_options.requestCert = true;
                 if (config.agentOptions.cert && config.agentOptions.key) {
                     api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.key), 'utf8');
                     api_key_options.cert = fs.readFileSync(path.resolve(config.agentOptions.cert), 'utf8');
@@ -148,7 +149,7 @@ module.exports.init = function(config, logger, stats) {
                 if (config.agentOptions.ciphers) {
                     api_key_options.ciphers = config.agentOptions.ciphers;
                 }
-                api_key_options.passphrase = config.agentOptions.passphrase;
+                if (config.agentOptions.passphrase) api_key_options.passphrase = config.agentOptions.passphrase;
             }
         }
         debug(api_key_options);
