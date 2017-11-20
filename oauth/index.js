@@ -130,15 +130,14 @@ module.exports.init = function(config, logger, stats) {
                 'x-dna-api-key': apiKey
             }
         };
-        console.log(config.agentOptions);
         if (config.agentOptions) {
             if (config.agentOptions.requestCert) {
                 if (config.agentOptions.cert && config.agentOptions.key) {
-                    api_key_options.cert = fs.readFileSync(path.resolve(config.agentOptions.key), 'utf8');
-                    api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.cert), 'utf8');
+                    api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.key), 'utf8');
+                    api_key_options.cert = fs.readFileSync(path.resolve(config.agentOptions.cert), 'utf8');
                     if (config.agentOptions.ca) api_key_options.ca = fs.readFileSync(path.resolve(config.agentOptions.ca), 'utf8');
                 } else if (config.agentOptions.pfx) {
-                    api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.pfx));
+                    api_key_options.pfx = fs.readFileSync(path.resolve(config.agentOptions.pfx));
                 }
                 if (config.agentOptions.rejectUnauthorized) {
                     api_key_options.rejectUnauthorized = true;
