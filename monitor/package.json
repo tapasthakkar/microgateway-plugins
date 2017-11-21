@@ -1,0 +1,16 @@
+{
+  "name": "monitor",
+  "version": "1.0.0",
+  "description": "monitor microgateway",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^3.1.0",
+    "lynx": "^0.2.0",
+    "memored": "^1.1.1"
+  }
+}

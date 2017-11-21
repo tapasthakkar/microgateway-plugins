@@ -16,5 +16,6 @@ module.exports = {
   healthcheck: require('./healthcheck'),
   'cloud-foundry-route-service': require('./cloud-foundry-route-service'),
   bauth: require('./bauth'),
-  cors: require('./cors')
+  cors: require('./cors'),
+  monitor: require('./monitor')
 }
