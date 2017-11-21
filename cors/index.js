@@ -5,7 +5,7 @@ module.exports.init = function(config, logger, stats) {
 
   var methods = config['cors-methods'] || 'GET, PUT, POST, DELETE, PATCH, OPTIONS';
   var maxAge = config['cors-max-age'] || '3628800';
-  var allowHeaders = config['cors-headers'] || 'Origin, x-requested-wuth, Accept, Content-Type, Accept-Encoding, Accept-Language, Host, Pragma, Referrer, User-Agent, Cache-Control, Authorization, x-api-key';
+  var allowHeaders = config['cors-headers'] || 'Origin, x-requested-with, Accept, Content-Type, Accept-Encoding, Accept-Language, Host, Pragma, Referrer, User-Agent, Cache-Control, Authorization, x-api-key';
   var origin = config['cors-origin'];
 
   return {
