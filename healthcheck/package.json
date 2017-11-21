@@ -4,7 +4,8 @@
   "description": "A basic plugin for healthcheck",
   "dependencies": {
     "debug": "^2.2.0",
-    "toobusy-js": "^0.5.1"
+    "toobusy-js": "^0.5.1",
+    "portastic":"^1.0.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
