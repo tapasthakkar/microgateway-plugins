@@ -1,13 +1,13 @@
-#Plugins
+# Plugins
 
 Build Status [![Build Status](https://travis-ci.org/apigee/microgateway-plugins.svg?branch=accumulate-request-fixes)](https://travis-ci.org/apigee/microgateway-plugins)
 
-##Overview
+## Overview
 This repo contains plugins for the [microgateway-core project](https://github.com/apigee/microgateway-core).  
 
 These plugins can be loaded into the microgateway calling the load plugin method
 
-##Building a plugin
+## Building a plugin
 must contain an init method which returns an object literal with all of the handlers
 
 ```javascript
@@ -35,13 +35,14 @@ the available handlers are
 * onclose_response
 * onerror_response
 
-the handler signature will look like 
+The handler signature will look like :
 
 ```javascript
 function(sourceRequest,sourceResponse,[options],next){}
 ```
-* sourceRequest: the request from the northbound server
-* sourceResponse the response to the northbound server
+
+* sourceRequest: the request from the northbound server;
+* sourceResponse the response to the northbound server;
 * options: are the full scope of fields you might need to operate on.  
  
   ```javascript 
