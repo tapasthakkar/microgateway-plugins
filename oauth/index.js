@@ -9,7 +9,6 @@ var cache = require('memored');
 var JWS = rs.jws.JWS;
 var requestLib = require('request');
 var _ = require('lodash');
-var util = require('util');
 
 const authHeaderRegex = /Bearer (.+)/;
 const PRIVATE_JWT_VALUES = ['application_name', 'client_id', 'api_product_list', 'iat', 'exp'];
@@ -233,7 +232,6 @@ module.exports.init = function(config, logger, stats) {
                     // default to now (in seconds) + 30m if not set
                     decodedToken.exp = decodedToken.exp || +(((Date.now() / 1000) + 1800).toFixed(0));
                     //apiKeyCache[apiKey] = decodedToken;
-					console.log("api key: " + apiKey);
                     cache.store(apiKey, decodedToken);
                     debug('api key cache store', apiKey);
                 } else {
