@@ -5,9 +5,11 @@ var url = require('url');
 var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
+var cache = require('memored');
 var JWS = rs.jws.JWS;
 var requestLib = require('request');
 var _ = require('lodash');
+var util = require('util');
 
 const authHeaderRegex = /Bearer (.+)/;
 const PRIVATE_JWT_VALUES = ['application_name', 'client_id', 'api_product_list', 'iat', 'exp'];
@@ -23,9 +25,11 @@ acceptField.alg = acceptAlg;
 var productOnly;
 var cacheKey = false;
 
+//const apiKeyCache = "apiKeyCache";
+
 module.exports.init = function(config, logger, stats) {
 
-    var apiKeyCache = {};
+    //var apiKeyCache = {};
     var request = config.request ? requestLib.defaults(config.request) : requestLib;
     var keys = config.jwk_keys ? JSON.parse(config.jwk_keys) : null;
 
@@ -105,22 +109,33 @@ module.exports.init = function(config, logger, stats) {
     var exchangeApiKeyForToken = function(req, res, next, config, logger, stats, middleware, apiKey) {
         var cacheControl = req.headers['cache-control'];
         if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
-            var token = apiKeyCache[apiKey];
-            if (token) {
-                if (Date.now() / 1000 < token.exp) { // not expired yet (token expiration is in seconds)
-                    debug('api key cache hit', apiKey);
-                    return authorize(req, res, next, logger, stats, token);
-                } else {
-                    delete apiKeyCache[apiKey];
-                    debug('api key cache expired', apiKey);
-                }
-            } else {
-                debug('api key cache miss', apiKey);
-            }
+            cache.read(apiKey, function(err, value){
+               if (value) {
+                   if (Date.now() / 1000 < value.exp) { // not expired yet (token expiration is in seconds)
+                       debug('api key cache hit', apiKey);
+                       return authorize(req, res, next, logger, stats, value);
+                   } else {
+                       //delete apiKeyCache[apiKey];
+					   cache.remove(apiKey);
+                       debug('api key cache expired', apiKey);
+					   requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
+                   }
+               }  else {
+                   debug('api key cache miss', apiKey);
+				   requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
+               }
+            });
+        } else {
+        	requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
         }
 
+    }
+	
+	function requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey) {
+		
         if (!config.verify_api_key_url) return sendError(req, res, next, logger, stats, 'invalid_request', 'API Key Verification URL not configured');
-        var api_key_options = {
+        
+		var api_key_options = {
             url: config.verify_api_key_url,
             method: 'POST',
             json: {
@@ -130,7 +145,8 @@ module.exports.init = function(config, logger, stats) {
                 'x-dna-api-key': apiKey
             }
         };
-        if (config.agentOptions) {
+        
+		if (config.agentOptions) {
             if (config.agentOptions.requestCert) {
                 api_key_options.requestCert = true;
                 if (config.agentOptions.cert && config.agentOptions.key) {
@@ -152,7 +168,7 @@ module.exports.init = function(config, logger, stats) {
                 if (config.agentOptions.passphrase) api_key_options.passphrase = config.agentOptions.passphrase;
             }
         }
-        debug(api_key_options);
+        //debug(api_key_options);
         request(api_key_options, function(err, response, body) {
             if (err) {
                 debug('verify apikey gateway timeout');
@@ -163,8 +179,8 @@ module.exports.init = function(config, logger, stats) {
                 return sendError(req, res, next, logger, stats, 'access_denied', response.statusMessage);
             }
             verify(body, config, logger, stats, middleware, req, res, next, apiKey);
-        });
-    }
+        });		
+	}
 
     var verify = function(token, config, logger, stats, middleware, req, res, next, apiKey) {
 
@@ -201,21 +217,7 @@ module.exports.init = function(config, logger, stats) {
 
         onrequest: function(req, res, next) {
             middleware(req, res, next);
-        },
-
-        api_key_cache_size: function() {
-            return Object.keys(apiKeyCache).length;
-        },
-
-        api_key_cache_clear: function() {
-            var deleted = 0;
-            Object.keys(apiKeyCache).forEach(function(key) {
-                delete apiKeyCache[key];
-                deleted++;
-            });
-            return deleted;
         }
-
     };
 
     function authorize(req, res, next, logger, stats, decodedToken, apiKey) {
@@ -227,16 +229,17 @@ module.exports.init = function(config, logger, stats) {
 
             if (apiKey) {
                 var cacheControl = req.headers['cache-control'];
-                if (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0)) { // caching is allowed
+                if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
                     // default to now (in seconds) + 30m if not set
                     decodedToken.exp = decodedToken.exp || +(((Date.now() / 1000) + 1800).toFixed(0));
-                    apiKeyCache[apiKey] = decodedToken;
+                    //apiKeyCache[apiKey] = decodedToken;
+					console.log("api key: " + apiKey);
+                    cache.store(apiKey, decodedToken);
                     debug('api key cache store', apiKey);
                 } else {
                     debug('api key cache skip', apiKey);
                 }
             }
-
             next();
         } else {
             return sendError(req, res, next, logger, stats, 'access_denied');
