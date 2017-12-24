@@ -6,7 +6,6 @@
 var debug = require('debug')('plugin:monitor');
 var cache = require('memored');
 const lynx = require('lynx');
-const os = require('os');
 
 module.exports.init = function(config, logger, stats) {
 
@@ -16,8 +15,6 @@ module.exports.init = function(config, logger, stats) {
 
     key = key + "." + os.hostname();
     debug('grafana: ' + host + ':' + port);
-    
-    const numcpus = os.cpus().length;
 
     const client = new lynx(host, port);
 
