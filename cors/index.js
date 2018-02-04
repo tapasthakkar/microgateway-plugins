@@ -10,16 +10,20 @@ module.exports.init = function(config, logger, stats) {
 
   return {
   	onrequest: function(req, res, next) {
+      debug('settings cors headers');
+
+      var accessControlAllowOriginValue;
+      if (origin) accessControlAllowOriginValue = origin;
+          else accessControlAllowOriginValue = req.headers['origin'];
+
 	  if(req.method == 'OPTIONS') {
-	    debug('settings cors headers');
-	    if (origin) res.setHeader('Access-Control-Allow-Origin', origin); 
-            else res.setHeader('Access-Control-Allow-Origin', req.headers['origin']);
+	    res.setHeader('Access-Control-Allow-Origin', accessControlAllowOriginValue);
 	    res.setHeader('Access-Control-Allow-Methods', methods);
        	    res.setHeader('Access-Control-Allow-Max-Age', maxAge);
 	    res.setHeader('Access-Control-Allow-Headers', allowHeaders);
 	    res.end();
 	  } else {
-	    debug('skipping cors plugin');
+        res.setHeader('Access-Control-Allow-Origin', accessControlAllowOriginValue);
 	    next();
 	  }
     }
