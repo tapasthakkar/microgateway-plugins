@@ -6,6 +6,7 @@ var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
 var cache = require('memored');
+var map = require('memored');
 var JWS = rs.jws.JWS;
 var requestLib = require('request');
 var _ = require('lodash');
@@ -23,6 +24,13 @@ acceptField.alg = acceptAlg;
 
 var productOnly;
 var cacheKey = false;
+//setup cache for oauth tokens
+var tokenCache = false;
+map.setup({
+    purgeInterval: 10000
+});
+
+var tokenCacheSize = 100;
 
 module.exports.init = function(config, logger, stats) {
 
@@ -45,6 +53,10 @@ module.exports.init = function(config, logger, stats) {
         var apiKey;
         //this flag will enable check against resource paths only
         productOnly = config['productOnly'] || false;
+        //token cache settings
+        tokenCache = config['tokenCache'] || false;
+		//max number of tokens in the cache
+        tokenCacheSize = config['tokenCacheSize'] || 100;
         //
         //support for enabling oauth or api key only
         if (oauth_only) {
@@ -180,31 +192,70 @@ module.exports.init = function(config, logger, stats) {
     var verify = function(token, config, logger, stats, middleware, req, res, next, apiKey) {
 
         var isValid = false;
-        var decodedToken = JWS.parse(token && token.token ? token.token : token);
-        if (keys) {
-            var i = 0;
-            debug('jwk kid ' + decodedToken.headerObj.kid);
-            for (; i < keys.length; i++) {
-                if (keys.kid == decodedToken.headerObj.kid) {
-                    break;
+        var oauthtoken = token && token.token ? token.token : token;
+        var decodedToken = JWS.parse(oauthtoken);
+        if (tokenCache == true) {
+            debug('token caching enabled')
+            map.read(oauthtoken, function(err, tokenvalue) {
+                if (!err && tokenvalue != undefined && tokenvalue != null && tokenvalue == oauthtoken) {
+                    debug('found token in cache');
+                    isValid = true;
+                    if (ejectToken(decodedToken.payloadObj.exp)) {
+                        debug('ejecting token from cache');
+                        map.remove(oauthtoken);
+                    }
+                } else {
+                    debug('token not found in cache');
+                    if (keys) {
+                        debug('using jwk');
+                        var pem = getPEM(decodedToken, keys);
+                        isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+                    } else {
+                        debug('validating jwt');
+                        isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                    }
                 }
-            }
-            var publickey = rs.KEYUTIL.getKey(keys.keys[i]);
-            var pem = rs.KEYUTIL.getPEM(publickey);
-            isValid = JWS.verifyJWT(token && token.token ? token.token : token, pem, acceptField);
+                if (!isValid) {
+                    if (config.allowInvalidAuthorization) {
+                        console.warn('ignoring err', err);
+                        return next();
+                    } else {
+                        debug('invalid token');
+                        return sendError(req, res, next, logger, stats, 'invalid_token');
+                    }
+                } else {
+                    if (tokenvalue == null || tokenvalue == undefined) {
+                        map.size(function(err, sizevalue) {
+                            if (!err && sizevalue != null && sizevalue < 100) {
+                                map.store(oauthtoken, oauthtoken);
+                            } else {
+                                debug('too many tokens in cache; ignore storing token');
+                            }
+                        });
+                    }
+                    authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+                }
+            });
         } else {
-            isValid = JWS.verifyJWT(token && token.token ? token.token : token, config.public_key, acceptField);
-        }
-        if (!isValid) {
-            if (config.allowInvalidAuthorization) {
-                console.warn('ignoring err', err);
-                return next();
+            if (keys) {
+				debug('using jwk');
+                var pem = getPEM(decodedToken, keys);
+                isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
             } else {
-                debug('invalid token');
-                return sendError(req, res, next, logger, stats, 'invalid_token');
+				debug('validating jwt');
+                isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
             }
-        } else {
-            authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+            if (!isValid) {
+                if (config.allowInvalidAuthorization) {
+                    console.warn('ignoring err', err);
+                    return next();
+                } else {
+                    debug('invalid token');
+                    return sendError(req, res, next, logger, stats, 'invalid_token');
+                }
+            } else {
+                authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+            }
         }
     };
 
@@ -314,6 +365,29 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
         else
             return matchesProxyRules;
     });
+}
+
+function getPEM(decodedToken, keys) {
+    var i = 0;
+    debug('jwk kid ' + decodedToken.headerObj.kid);
+    for (; i < keys.length; i++) {
+        if (keys.kid == decodedToken.headerObj.kid) {
+            break;
+        }
+    }
+    var publickey = rs.KEYUTIL.getKey(keys.keys[i]);
+    return rs.KEYUTIL.getPEM(publickey);
+}
+
+function ejectToken(expTimestamp) {
+    var currentTimestampInSeconds = new Date().getTime() / 1000;
+    var timeDifferenceInSeconds = (expTimestamp - currentTimestampInSeconds);
+
+    if (Math.abs(timeDifferenceInSeconds) <= parseInt(acceptField.gracePeriod)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 function sendError(req, res, next, logger, stats, code, message) {
