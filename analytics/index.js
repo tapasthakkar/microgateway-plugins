@@ -49,7 +49,7 @@ module.exports.init = function(config, logger, stats) {
 
     onrequest: function(req, res, next) {
       var timestamp = Date.now();
-      req.headers['client_received_start_timestamp'] = timestamp;
+      req.headers['client_received_start_timestamp'] = req.reqStartTimestamp || timestamp;
       middleware(req, res, next);
     },
 
