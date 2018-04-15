@@ -217,7 +217,7 @@ module.exports.init = function(config, logger, stats) {
                 }
                 if (!isValid) {
                     if (config.allowInvalidAuthorization) {
-                        console.warn('ignoring err', err);
+                        console.warn('ignoring err');
                         return next();
                     } else {
                         debug('invalid token');
@@ -247,7 +247,7 @@ module.exports.init = function(config, logger, stats) {
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
-                    console.warn('ignoring err', err);
+                    console.warn('ignoring err');
                     return next();
                 } else {
                     debug('invalid token');
