@@ -42,9 +42,6 @@ module.exports.init = function(config, logger, stats) {
         //set grace period
         var gracePeriod = config['gracePeriod'] || 0;
         acceptField.gracePeriod = gracePeriod;
-        //support for enabling oauth or api key only
-        var oauth_only = config['allowOAuthOnly'] || false;
-        var apikey_only = config['allowAPIKeyOnly'] || false;
         //this flag will enable check against resource paths only
         productOnly = config['productOnly'] || false;
         //token cache settings
@@ -52,37 +49,50 @@ module.exports.init = function(config, logger, stats) {
         //max number of tokens in the cache
         tokenCacheSize = config['tokenCacheSize'] || 100;
         //
-            if (!req.headers[authHeaderName]) {
-                if (config.allowNoAuthorization) {
-                    return next();
-                } else {
-                    debug('missing_authorization');
-                    return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');
-                }
+        if (!req.headers[authHeaderName]) {
+            if (config.allowNoAuthorization) {
+                return next();
             } else {
-                var header = authHeaderRegex.exec(req.headers[authHeaderName]);
-                if (!header || header.length < 2) {
-                    debug('Invalid Authorization Header');
-                    return sendError(req, res, next, logger, stats, 'invalid_request', 'Invalid Authorization header');
-                }
+                debug('missing_authorization');
+                return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');
             }
-		
-            if (!keepAuthHeader) {
-                delete(req.headers[authHeaderName]); // don't pass this header to target
+        } else {
+            var header = authHeaderRegex.exec(req.headers[authHeaderName]);
+            if (!header || header.length < 2) {
+                debug('Invalid Authorization Header');
+                return sendError(req, res, next, logger, stats, 'invalid_request', 'Invalid Authorization header');
             }
+        }
 
-            var token = '';
-            if (header) {
-                token = header[1];
-            }
-            verify(token, config, logger, stats, middleware, req, res, next);
+        if (!keepAuthHeader) {
+            delete(req.headers[authHeaderName]); // don't pass this header to target
+        }
+
+        var token = '';
+        if (header) {
+            token = header[1];
+        }
+        verify(token, config, logger, stats, middleware, req, res, next);
     }
 
-    var verify = function(token, config, logger, stats, middleware, req, res, next, apiKey) {
+    var verify = function(token, config, logger, stats, middleware, req, res, next) {
 
         var isValid = false;
         var oauthtoken = token && token.token ? token.token : token;
-        var decodedToken = JWS.parse(oauthtoken);
+		var decodedToken;
+		
+		try {
+			decodedToken = JWS.parse(oauthtoken);
+		} catch (err) {
+            if (config.allowInvalidAuthorization) {
+                console.warn('ignoring err');
+                return next();
+            } else {
+                debug('invalid token');
+                return sendError(req, res, next, logger, stats, 'invalid_token');
+            }
+		}
+        
         if (tokenCache == true) {
             debug('token caching enabled')
             map.read(oauthtoken, function(err, tokenvalue) {
@@ -122,7 +132,7 @@ module.exports.init = function(config, logger, stats) {
                             }
                         });
                     }
-                    authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+                    authorize(req, res, next, logger, stats, decodedToken.payloadObj);
                 }
             });
         } else {
@@ -143,7 +153,7 @@ module.exports.init = function(config, logger, stats) {
                     return sendError(req, res, next, logger, stats, 'invalid_token');
                 }
             } else {
-                authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+                authorize(req, res, next, logger, stats, decodedToken.payloadObj);
             }
         }
     };
@@ -155,25 +165,11 @@ module.exports.init = function(config, logger, stats) {
         }
     };
 
-    function authorize(req, res, next, logger, stats, decodedToken, apiKey) {
+    function authorize(req, res, next, logger, stats, decodedToken) {
         if (checkIfAuthorized(config, req.reqUrl.path, res.proxy, decodedToken)) {
             req.token = decodedToken;
-
             var authClaims = _.omit(decodedToken, PRIVATE_JWT_VALUES);
             req.headers['x-authorization-claims'] = new Buffer(JSON.stringify(authClaims)).toString('base64');
-
-            if (apiKey) {
-                var cacheControl = req.headers['cache-control'];
-                if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
-                    // default to now (in seconds) + 30m if not set
-                    decodedToken.exp = decodedToken.exp || +(((Date.now() / 1000) + 1800).toFixed(0));
-                    //apiKeyCache[apiKey] = decodedToken;
-                    cache.store(apiKey, decodedToken);
-                    debug('api key cache store', apiKey);
-                } else {
-                    debug('api key cache skip', apiKey);
-                }
-            }
             next();
         } else {
             return sendError(req, res, next, logger, stats, 'access_denied');
@@ -309,7 +305,7 @@ function sendError(req, res, next, logger, stats, code, message) {
     logger.error({
         req: req,
         res: res
-    }, 'oauth');
+    }, 'oauthv2');
 
     if (!res.finished) res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify(response));

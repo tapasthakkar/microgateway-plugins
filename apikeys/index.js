@@ -31,6 +31,9 @@ module.exports.init = function(config, logger, stats) {
     var middleware = function(req, res, next) {
 
         var apiKeyHeaderName = config["api-key-header"] ? config["api-key-header"] : "x-api-key";
+		//set to true retain the api key
+		var keepApiKey = config['keep-api-key'] || false;
+		//cache api keys
         cacheKey = config["cacheKey"] || false;
         //set grace period
         var gracePeriod = config["gracePeriod"] || 0;
@@ -42,12 +45,19 @@ module.exports.init = function(config, logger, stats) {
 
         //leaving rest of the code same to ensure backward compatibility
         if (apiKey = req.headers[apiKeyHeaderName]) {
+			if (!keepApiKey) {
+				delete(req.headers[apiKeyHeaderName]); // don't pass this header to target
+			}
             exchangeApiKeyForToken(req, res, next, config, logger, stats, middleware, apiKey);
-        } else if (req.reqUrl && req.reqUrl.query && (apiKey = req.reqUrl.query[apiKeyHeaderName])) {
+        } else if (req.reqUrl && req.reqUrl.query && (apiKey = req.reqUrl.query[apiKeyHeaderName])) {	
             exchangeApiKeyForToken(req, res, next, config, logger, stats, middleware, apiKey);
         } else {
-            debug("missing_authorization");
-            return sendError(req, res, next, logger, stats, "missing_authorization", "Missing Authorization header");
+            if (config.allowNoAuthorization) {
+                return next();
+            } else {
+                debug('missing_authorization');
+                return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing API Key header');
+            }
         }
     }
 
@@ -119,8 +129,13 @@ module.exports.init = function(config, logger, stats) {
                 return sendError(req, res, next, logger, stats, "gateway_timeout", err.message);
             }
             if (response.statusCode !== 200) {
-                debug("verify apikey access_denied");
-                return sendError(req, res, next, logger, stats, "access_denied", response.statusMessage);
+				if (config.allowInvalidAuthorization) {
+					console.warn("ignoring err");
+					return next();
+				} else {
+	                debug("verify apikey access_denied");
+	                return sendError(req, res, next, logger, stats, "access_denied", response.statusMessage);					
+				}
             }
             verify(body, config, logger, stats, middleware, req, res, next, apiKey);
         });
@@ -131,14 +146,14 @@ module.exports.init = function(config, logger, stats) {
         var isValid = false;
         var oauthtoken = token && token.token ? token.token : token;
         var decodedToken = JWS.parse(oauthtoken);
-		debug(decodedToken)
+        debug(decodedToken)
         if (keys) {
             debug("using jwk");
             var pem = getPEM(decodedToken, keys);
             isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
         } else {
             debug("validating jwt");
-			debug(config.public_key)
+            debug(config.public_key)
             isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
         }
         if (!isValid) {
@@ -274,17 +289,6 @@ function getPEM(decodedToken, keys) {
     return rs.KEYUTIL.getPEM(publickey);
 }
 
-function ejectToken(expTimestamp) {
-    var currentTimestampInSeconds = new Date().getTime() / 1000;
-    var timeDifferenceInSeconds = (expTimestamp - currentTimestampInSeconds);
-
-    if (Math.abs(timeDifferenceInSeconds) <= parseInt(acceptField.gracePeriod)) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
 function sendError(req, res, next, logger, stats, code, message) {
 
     switch (code) {
@@ -296,7 +300,7 @@ function sendError(req, res, next, logger, stats, code, message) {
             break;
         case "invalid_token":
         case "missing_authorization":
-        case "invalid_authorization":
+        case "invalid_request":
             res.statusCode = 401;
             break;
         case "gateway_timeout":
@@ -315,7 +319,7 @@ function sendError(req, res, next, logger, stats, code, message) {
     logger.error({
         req: req,
         res: res
-    }, "oauth");
+    }, "apikeys");
 
     if (!res.finished) res.setHeader("content-type", "application/json");
     res.end(JSON.stringify(response));
