@@ -17,5 +17,7 @@ module.exports = {
   'cloud-foundry-route-service': require('./cloud-foundry-route-service'),
   bauth: require('./bauth'),
   cors: require('./cors'),
-  monitor: require('./monitor')
+  monitor: require('./monitor'),
+  apikeys: require('./apikeys'),
+  oauthv2: require('./oauthv2')
 }

@@ -1,11 +1,10 @@
 'use strict';
 
-var debug = require('debug')('plugin:oauth');
+var debug = require('debug')('plugin:oauthv2');
 var url = require('url');
 var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
-var cache = require('memored');
 var map = require('memored');
 var JWS = rs.jws.JWS;
 var requestLib = require('request');
@@ -23,7 +22,6 @@ var acceptField = {};
 acceptField.alg = acceptAlg;
 
 var productOnly;
-var cacheKey = false;
 //setup cache for oauth tokens
 var tokenCache = false;
 map.setup({
@@ -40,17 +38,13 @@ module.exports.init = function(config, logger, stats) {
     var middleware = function(req, res, next) {
 
         var authHeaderName = config['authorization-header'] ? config['authorization-header'] : 'authorization';
-        var apiKeyHeaderName = config['api-key-header'] ? config['api-key-header'] : 'x-api-key';
         var keepAuthHeader = config['keep-authorization-header'] || false;
-        cacheKey = config['cacheKey'] || false;
         //set grace period
         var gracePeriod = config['gracePeriod'] || 0;
         acceptField.gracePeriod = gracePeriod;
         //support for enabling oauth or api key only
         var oauth_only = config['allowOAuthOnly'] || false;
         var apikey_only = config['allowAPIKeyOnly'] || false;
-        //
-        var apiKey;
         //this flag will enable check against resource paths only
         productOnly = config['productOnly'] || false;
         //token cache settings
@@ -58,8 +52,6 @@ module.exports.init = function(config, logger, stats) {
         //max number of tokens in the cache
         tokenCacheSize = config['tokenCacheSize'] || 100;
         //
-        //support for enabling oauth or api key only
-        if (oauth_only) {
             if (!req.headers[authHeaderName]) {
                 if (config.allowNoAuthorization) {
                     return next();
@@ -74,34 +66,7 @@ module.exports.init = function(config, logger, stats) {
                     return sendError(req, res, next, logger, stats, 'invalid_request', 'Invalid Authorization header');
                 }
             }
-        } else if (apikey_only) {
-            if (!req.headers[apiKeyHeaderName]) {
-                debug('missing api key');
-                return sendError(req, res, next, logger, stats, 'invalid_authorization', 'Missing API Key header');
-            }
-        }
-
-        //leaving rest of the code same to ensure backward compatibility
-        if (!req.headers[authHeaderName] || config.allowAPIKeyOnly) {
-            if (apiKey = req.headers[apiKeyHeaderName]) {
-                exchangeApiKeyForToken(req, res, next, config, logger, stats, middleware, apiKey);
-            } else if (req.reqUrl && req.reqUrl.query && (apiKey = req.reqUrl.query[apiKeyHeaderName])) {
-                exchangeApiKeyForToken(req, res, next, config, logger, stats, middleware, apiKey);
-            } else if (config.allowNoAuthorization) {
-                return next();
-            } else {
-                debug('missing_authorization');
-                return sendError(req, res, next, logger, stats, 'missing_authorization', 'Missing Authorization header');
-            }
-        } else {
-            var header = authHeaderRegex.exec(req.headers[authHeaderName]);
-            if (!config.allowInvalidAuthorization) {
-                if (!header || header.length < 2) {
-                    debug('Invalid Authorization Header');
-                    return sendError(req, res, next, logger, stats, 'invalid_request', 'Invalid Authorization header');
-                }
-            }
-
+		
             if (!keepAuthHeader) {
                 delete(req.headers[authHeaderName]); // don't pass this header to target
             }
@@ -111,82 +76,6 @@ module.exports.init = function(config, logger, stats) {
                 token = header[1];
             }
             verify(token, config, logger, stats, middleware, req, res, next);
-        }
-    }
-
-    var exchangeApiKeyForToken = function(req, res, next, config, logger, stats, middleware, apiKey) {
-        var cacheControl = req.headers['cache-control'];
-        if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
-            cache.read(apiKey, function(err, value) {
-                if (value) {
-                    if (Date.now() / 1000 < value.exp) { // not expired yet (token expiration is in seconds)
-                        debug('api key cache hit', apiKey);
-                        return authorize(req, res, next, logger, stats, value);
-                    } else {
-                        cache.remove(apiKey);
-                        debug('api key cache expired', apiKey);
-                        requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
-                    }
-                } else {
-                    debug('api key cache miss', apiKey);
-                    requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
-                }
-            });
-        } else {
-            requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
-        }
-
-    }
-
-    function requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey) {
-
-        if (!config.verify_api_key_url) return sendError(req, res, next, logger, stats, 'invalid_request', 'API Key Verification URL not configured');
-
-        var api_key_options = {
-            url: config.verify_api_key_url,
-            method: 'POST',
-            json: {
-                'apiKey': apiKey
-            },
-            headers: {
-                'x-dna-api-key': apiKey
-            }
-        };
-
-        if (config.agentOptions) {
-            if (config.agentOptions.requestCert) {
-                api_key_options.requestCert = true;
-                if (config.agentOptions.cert && config.agentOptions.key) {
-                    api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.key), 'utf8');
-                    api_key_options.cert = fs.readFileSync(path.resolve(config.agentOptions.cert), 'utf8');
-                    if (config.agentOptions.ca) api_key_options.ca = fs.readFileSync(path.resolve(config.agentOptions.ca), 'utf8');
-                } else if (config.agentOptions.pfx) {
-                    api_key_options.pfx = fs.readFileSync(path.resolve(config.agentOptions.pfx));
-                }
-                if (config.agentOptions.rejectUnauthorized) {
-                    api_key_options.rejectUnauthorized = true;
-                }
-                if (config.agentOptions.secureProtocol) {
-                    api_key_options.secureProtocol = true;
-                }
-                if (config.agentOptions.ciphers) {
-                    api_key_options.ciphers = config.agentOptions.ciphers;
-                }
-                if (config.agentOptions.passphrase) api_key_options.passphrase = config.agentOptions.passphrase;
-            }
-        }
-        //debug(api_key_options);
-        request(api_key_options, function(err, response, body) {
-            if (err) {
-                debug('verify apikey gateway timeout');
-                return sendError(req, res, next, logger, stats, 'gateway_timeout', err.message);
-            }
-            if (response.statusCode !== 200) {
-                debug('verify apikey access_denied');
-                return sendError(req, res, next, logger, stats, 'access_denied', response.statusMessage);
-            }
-            verify(body, config, logger, stats, middleware, req, res, next, apiKey);
-        });
     }
 
     var verify = function(token, config, logger, stats, middleware, req, res, next, apiKey) {
