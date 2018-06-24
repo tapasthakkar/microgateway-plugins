@@ -18,7 +18,7 @@ module.exports.init = function(config, logger, stats) {
     var product = config[productName];
     if (!product.uri && !product.key && !product.secret && !product.allow && !product.interval || product.interval === "null") {
       // skip non-quota config
-      console.log('Not enough info for configuring quota');
+      debug('Quota not configured on the API product, skipping. This message is safe to ignore');
       return;
     }     
 
