@@ -3,7 +3,7 @@
  *
  */
 
-var debug = require('debug')('plugin:extoauth');
+var debug = require('debug')('plugin:extauth');
 var request = require('request');
 var rs = require('jsrsasign');
 var JWS = rs.jws.JWS;
@@ -25,6 +25,8 @@ module.exports.init = function(config, logger, stats) {
     var keyType = config.keyType || 'jwk';
     //return error from plugin
     var sendErr = config.sendErr || true;
+    //preserve or delete the auth header
+    var keepAuthHeader = config['keep-authorization-header'] || false;
 
     if (iss) {
         debug("Issuer " + iss);
@@ -102,8 +104,13 @@ module.exports.init = function(config, logger, stats) {
                             debug("key type is PEM");
                             isValid = validateJWT(publickeys, jwtpayload[1], exp);
                             if (isValid) {
-                                delete(req.headers['authorization']); //removing the auth header
-                                req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];
+                                if (!keepAuthHeader) {
+                                    delete(req.headers['authorization']);
+                                }
+                                if (!sendErr) {
+                                    //if this plugin is not sending errors, assume MG is not in local mode
+                                    req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];
+                                }
                             } else {
                                 debug("ERROR - JWT is invalid");
                                 delete(req.headers['authorization']);
@@ -133,8 +140,13 @@ module.exports.init = function(config, logger, stats) {
                                 var pem = rs.KEYUTIL.getPEM(publickey);
                                 isValid = validateJWT(pem, jwtpayload[1], exp);
                                 if (isValid) {
-                                    delete(req.headers['authorization']); //removing the auth header
-                                    req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];
+                                    if (!keepAuthHeader) {
+                                        delete(req.headers['authorization']);
+                                    }
+                                    if (!sendErr) {
+                                        //if this plugin is not sending errors, assume MG is not in local mode
+                                        req.headers['x-api-key'] = jwtdecode.payloadObj[client_id];
+                                    }
                                 } else {
                                     debug("ERROR - JWT is invalid");
                                     delete(req.headers['authorization']);
