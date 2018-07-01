@@ -19,5 +19,6 @@ module.exports = {
   cors: require('./cors'),
   monitor: require('./monitor'),
   apikeys: require('./apikeys'),
-  oauthv2: require('./oauthv2')
+  oauthv2: require('./oauthv2'),
+  extauth: require('./extauth')
 }
