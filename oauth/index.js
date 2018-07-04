@@ -262,11 +262,11 @@ module.exports.init = function(config, logger, stats) {
     return {
 
         onrequest: function(req, res, next) {
-            if (process.env.EDGEMICRO_LOCAL) {
-                middleware(req, res, next);
-            } else {
+            if (process.env.EDGEMICRO_LOCAL == "1") {
                 debug ("MG running in local mode. Skipping OAuth");
                 next();
+            } else {
+                middleware(req, res, next);
             }
         }
     };
