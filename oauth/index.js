@@ -39,24 +39,24 @@ module.exports.init = function(config, logger, stats) {
 
     var middleware = function(req, res, next) {
 
-        var authHeaderName = config['authorization-header'] ? config['authorization-header'] : 'authorization';
-        var apiKeyHeaderName = config['api-key-header'] ? config['api-key-header'] : 'x-api-key';
-        var keepAuthHeader = config['keep-authorization-header'] || false;
-        cacheKey = config['cacheKey'] || false;
+        var authHeaderName = config.hasOwnProperty('authorization-header') ? config['authorization-header'] : 'authorization';
+        var apiKeyHeaderName = config.hasOwnProperty('api-key-header') ? config['api-key-header'] : 'x-api-key';
+        var keepAuthHeader = config.hasOwnProperty('keep-authorization-header') ? config['keep-authorization-header'] : false;
+        cacheKey = config.hasOwnProperty('cacheKey') ? config.cacheKey : false;
         //set grace period
-        var gracePeriod = config['gracePeriod'] || 0;
+        var gracePeriod = config.hasOwnProperty('gracePeriod') ? config.gracePeriod : 0;
         acceptField.gracePeriod = gracePeriod;
         //support for enabling oauth or api key only
-        var oauth_only = config['allowOAuthOnly'] || false;
-        var apikey_only = config['allowAPIKeyOnly'] || false;
+        var oauth_only = config.hasOwnProperty('allowOAuthOnly') ? config.allowOAuthOnly : false;
+        var apikey_only = config.hasOwnProperty('allowAPIKeyOnly') ? config.allowAPIKeyOnly : false;
         //
         var apiKey;
         //this flag will enable check against resource paths only
-        productOnly = config['productOnly'] || false;
+        productOnly = config.hasOwnProperty('productOnly') ? config.productOnly : false;
         //token cache settings
-        tokenCache = config['tokenCache'] || false;
+        tokenCache = config.hasOwnProperty('tokenCache') ? config.tokenCache : false;
         //max number of tokens in the cache
-        tokenCacheSize = config['tokenCacheSize'] || 100;
+        tokenCacheSize = config.hasOwnProperty('tokenCacheSize') ? config.tokenCacheSize : 100;
         //
         //support for enabling oauth or api key only
         if (oauth_only) {

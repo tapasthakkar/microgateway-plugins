@@ -17,16 +17,17 @@ acceptField.alg = acceptAlg;
 module.exports.init = function(config, logger, stats) {
 
     var publickeys = {};
-    var publickey_url = config.publickey_url;
-    var client_id = config.client_id || 'client_id';
-    var iss = config.iss;
-    var exp = config.exp;
+    var publickey_url = config["publickey_url"];
+    var client_id = config.hasOwnProperty("client_id") ? config.client_id : 'client_id';
+    var iss = config["iss"];
     //set keyType to pem if the endpoint returns a single pem file
-    var keyType = config.keyType || 'jwk';
+    var keyType = config.hasOwnProperty("keyType") ? config.keyType : 'jwk';
+    //check for jwt expiry
+    var exp = config.hasOwnProperty('exp') ? config.exp : true;
     //return error from plugin
-    var sendErr = config.sendErr || true;
+    var sendErr = config.hasOwnProperty("sendErr") ? config.sendErr : true;
     //preserve or delete the auth header
-    var keepAuthHeader = config['keep-authorization-header'] || false;
+    var keepAuthHeader = config.hasOwnProperty('keep-authorization-header') ? config['keep-authorization-header'] : false;
 
     if (iss) {
         debug("Issuer " + iss);
@@ -43,7 +44,8 @@ module.exports.init = function(config, logger, stats) {
             console.log(err);
         } else {
             debug("loaded public keys");
-            if (config.keyType == 'jwk') {
+            if (keyType == 'jwk') {
+                debug("keyType is jwk");
                 publickeys = JSON.parse(body);
             } else {
                 //the body should contain a single pem
@@ -60,7 +62,7 @@ module.exports.init = function(config, logger, stats) {
                 }
             }
             debug("no public key that matches kid found");
-            return "";
+            return null;
         } else if (publickeys[kid]) { //handle cases like https://www.googleapis.com/oauth2/v1/certs
             return publickeys[kid];
         } else { //if the publickeys url does not return arrays, then use the only public key
@@ -100,6 +102,7 @@ module.exports.init = function(config, logger, stats) {
                     var jwtdecode = JWS.parse(jwtpayload[1]);
                     if (jwtdecode.headerObj) {
                         var kid = jwtdecode.headerObj.kid;
+                        debug("Found jwt kid: " + kid);
                         if (keyType != 'jwk') {
                             debug("key type is PEM");
                             isValid = validateJWT(publickeys, jwtpayload[1], exp);
@@ -136,10 +139,12 @@ module.exports.init = function(config, logger, stats) {
                                     return sendError(req, res, next, logger, stats, 'invalid_authorization');
                                 }                                
                             } else {
+                                debug("Found JWK");
                                 var publickey = rs.KEYUTIL.getKey(jwk);
                                 var pem = rs.KEYUTIL.getPEM(publickey);
                                 isValid = validateJWT(pem, jwtpayload[1], exp);
                                 if (isValid) {
+                                    debug("JWT is valid");
                                     if (!keepAuthHeader) {
                                         delete(req.headers['authorization']);
                                     }
