@@ -30,18 +30,18 @@ module.exports.init = function(config, logger, stats) {
 
     var middleware = function(req, res, next) {
 
-        var apiKeyHeaderName = config["api-key-header"] ? config["api-key-header"] : "x-api-key";
+        var apiKeyHeaderName = config.hasOwnProperty("api-key-header") ? config["api-key-header"] : "x-api-key";
 		//set to true retain the api key
-		var keepApiKey = config['keep-api-key'] || false;
+		var keepApiKey = config.hasOwnProperty('keep-api-key') ? config['keep-api-key'] : false;
 		//cache api keys
-        cacheKey = config["cacheKey"] || false;
+        cacheKey = config.hasOwnProperty("cacheKey") ? config.cacheKey : false;
         //set grace period
-        var gracePeriod = config["gracePeriod"] || 0;
+        var gracePeriod = config.hasOwnProperty("gracePeriod") ? config.gracePeriod : 0;
         acceptField.gracePeriod = gracePeriod;
         //store api keys here
         var apiKey;
         //this flag will enable check against resource paths only
-        productOnly = config["productOnly"] || false;
+        productOnly = config.hasOwnProperty("productOnly") ? config.productOnly : false;
 
         //leaving rest of the code same to ensure backward compatibility
         if (apiKey = req.headers[apiKeyHeaderName]) {
@@ -172,7 +172,12 @@ module.exports.init = function(config, logger, stats) {
     return {
 
         onrequest: function(req, res, next) {
-            middleware(req, res, next);
+            if (process.env.EDGEMICRO_LOCAL == "1") {
+                debug ("MG running in local mode. Skipping OAuth");
+                next();
+            } else {
+                middleware(req, res, next);
+            }
         }
     };
 

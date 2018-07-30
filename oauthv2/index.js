@@ -37,17 +37,17 @@ module.exports.init = function(config, logger, stats) {
 
     var middleware = function(req, res, next) {
 
-        var authHeaderName = config['authorization-header'] ? config['authorization-header'] : 'authorization';
-        var keepAuthHeader = config['keep-authorization-header'] || false;
+        var authHeaderName = config.hasOwnProperty('authorization-header') ? config['authorization-header'] : 'authorization';
+        var keepAuthHeader = config.hasOwnProperty('keep-authorization-header') ? config['keep-authorization-header'] : false;
         //set grace period
-        var gracePeriod = config['gracePeriod'] || 0;
+        var gracePeriod = config.hasOwnProperty('gracePeriod') ? config.gracePeriod : 0;
         acceptField.gracePeriod = gracePeriod;
         //this flag will enable check against resource paths only
-        productOnly = config['productOnly'] || false;
+        productOnly = config.hasOwnProperty('productOnly') ? config.productOnly : false;
         //token cache settings
-        tokenCache = config['tokenCache'] || false;
+        tokenCache = config.hasOwnProperty('tokenCache') ? config.tokenCache : false;
         //max number of tokens in the cache
-        tokenCacheSize = config['tokenCacheSize'] || 100;
+        tokenCacheSize = config.hasOwnProperty('tokenCacheSize') ? config.tokenCacheSize : 100;
         //
         if (!req.headers[authHeaderName]) {
             if (config.allowNoAuthorization) {
@@ -161,7 +161,12 @@ module.exports.init = function(config, logger, stats) {
     return {
 
         onrequest: function(req, res, next) {
-            middleware(req, res, next);
+            if (process.env.EDGEMICRO_LOCAL == "1") {
+                debug ("MG running in local mode. Skipping OAuth");
+                next();
+            } else {
+                middleware(req, res, next);
+            }
         }
     };
 
