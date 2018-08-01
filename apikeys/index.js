@@ -42,6 +42,10 @@ module.exports.init = function(config, logger, stats) {
         var apiKey;
         //this flag will enable check against resource paths only
         productOnly = config.hasOwnProperty("productOnly") ? config.productOnly : false;
+        //if local proxy is set, ignore proxies
+        if (process.env.EDGEMICRO_LOCAL_PROXY == "1") {
+            productOnly = true;
+        }        
 
         //leaving rest of the code same to ensure backward compatibility
         if (apiKey = req.headers[apiKeyHeaderName]) {

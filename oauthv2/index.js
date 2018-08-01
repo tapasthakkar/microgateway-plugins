@@ -44,6 +44,10 @@ module.exports.init = function(config, logger, stats) {
         acceptField.gracePeriod = gracePeriod;
         //this flag will enable check against resource paths only
         productOnly = config.hasOwnProperty('productOnly') ? config.productOnly : false;
+        //if local proxy is set, ignore proxies
+        if (process.env.EDGEMICRO_LOCAL_PROXY == "1") {
+            productOnly = true;
+        }        
         //token cache settings
         tokenCache = config.hasOwnProperty('tokenCache') ? config.tokenCache : false;
         //max number of tokens in the cache
