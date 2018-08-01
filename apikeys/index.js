@@ -53,7 +53,7 @@ module.exports.init = function(config, logger, stats) {
 				delete(req.headers[apiKeyHeaderName]); // don't pass this header to target
 			}
             exchangeApiKeyForToken(req, res, next, config, logger, stats, middleware, apiKey);
-        } else if (req.reqUrl && req.reqUrl.query && (apiKey = req.reqUrl.query[apiKeyHeaderName])) {	
+        } else if (req.reqUrl && req.reqUrl.query && (apiKey = req.reqUrl.query[apiKeyHeaderName])) {
             exchangeApiKeyForToken(req, res, next, config, logger, stats, middleware, apiKey);
         } else {
             if (config.allowNoAuthorization) {
@@ -67,7 +67,7 @@ module.exports.init = function(config, logger, stats) {
 
     var exchangeApiKeyForToken = function(req, res, next, config, logger, stats, middleware, apiKey) {
         var cacheControl = req.headers["cache-control"];
-        if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf("no-cache") < 0))) { // caching is allowed
+        if (cacheKey || (cacheControl && cacheControl.indexOf("no-cache") < 0)) { // caching is allowed
             cache.read(apiKey, function(err, value) {
                 if (value) {
                     if (Date.now() / 1000 < value.exp) { // not expired yet (token expiration is in seconds)
@@ -138,7 +138,7 @@ module.exports.init = function(config, logger, stats) {
 					return next();
 				} else {
 	                debug("verify apikey access_denied");
-	                return sendError(req, res, next, logger, stats, "access_denied", response.statusMessage);					
+	                return sendError(req, res, next, logger, stats, "access_denied", response.statusMessage);
 				}
             }
             verify(body, config, logger, stats, middleware, req, res, next, apiKey);
@@ -194,7 +194,7 @@ module.exports.init = function(config, logger, stats) {
 
             if (apiKey) {
                 var cacheControl = req.headers["cache-control"];
-                if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf("no-cache") < 0))) { // caching is toFixed
+                if (cacheKey || (cacheControl && cacheControl.indexOf("no-cache") < 0)) { // caching is toFixed
                     // default to now (in seconds) + 30m if not set
                     decodedToken.exp = decodedToken.exp || +(((Date.now() / 1000) + 1800).toFixed(0));
                     //apiKeyCache[apiKey] = decodedToken;
