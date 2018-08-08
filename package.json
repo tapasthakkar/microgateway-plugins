@@ -16,6 +16,7 @@
     "lynx": "^0.2.0",
     "memored": "^1.1.1",
     "minimatch": "^3.0.4",
+    "portastic": "^1.0.1",
     "request": "^2.87.0",
     "toobusy-js": "^0.5.1",
     "volos-analytics-apigee": "^0.4.0",
