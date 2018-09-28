@@ -1,7 +1,5 @@
 {
   "name": "microgateway-plugins",
-  "version": "2.3.27-beta",
-  "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
     "ajv": {
@@ -1168,4 +1166,6 @@
       "dev": true
     }
   }
+  "version": "2.3.28",
+  "lockfileVersion": 1
 }
