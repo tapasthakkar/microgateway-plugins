@@ -6,8 +6,24 @@ module.exports.init = function(config, logger, stats) {
 
     config.finalizeRecord = function finalizeRecord(req, res, record, cb) {
         if (res.proxy) {
-            record.apiproxy = res.proxy.name;
-            record.apiproxy_revision = res.proxy.revision;
+            //detect healthcheck paths; if detected, add -health to the proxy name so that ax 
+            //can distinguish between healthcheck calls and regular apis calls.
+            var proxyPath = req.url.split('?')[0];            
+            if (config.proxyPath) {
+                if (config.proxyPath == proxyPath) {
+                    record.apiproxy = res.proxy.name + "-health";
+                    record.apiproxy_revision = res.proxy.revision;
+                }
+            } else if (config.relativePath) {
+                var relativePath = "/" + proxyPath.split('/')[2];
+                if (config.relativePath == relativePath) {
+                    record.apiproxy = res.proxy.name + "-health";
+                    record.apiproxy_revision = res.proxy.revision; 
+                }
+            } else {
+                record.apiproxy = res.proxy.name;
+                record.apiproxy_revision = res.proxy.revision;
+            }
         }
 
         if (config.mask_request_uri) {
