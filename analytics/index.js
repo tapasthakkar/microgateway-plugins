@@ -6,8 +6,15 @@ module.exports.init = function(config, logger, stats) {
 
     config.finalizeRecord = function finalizeRecord(req, res, record, cb) {
         if (res.proxy) {
-            record.apiproxy = res.proxy.name;
-            record.apiproxy_revision = res.proxy.revision;
+            //detect healthcheck
+            var proxyPath = req.url.split('?')[0];
+            if (config.healthcheckPath == proxyPath) {
+                record.apiproxy = res.proxy.name + "-health";
+                record.apiproxy_revision = res.proxy.revision;
+            } else {
+                record.apiproxy = res.proxy.name;
+                record.apiproxy_revision = res.proxy.revision;
+            }
         }
 
         if (config.mask_request_uri) {
