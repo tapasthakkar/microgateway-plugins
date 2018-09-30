@@ -219,7 +219,7 @@ function sendError(req, res, next, logger, stats, code, message) {
     //opentracing
     if (process.env.EDGEMICRO_OPENTRACE) {
         const traceHelper = require('../microgateway-core/lib/trace-helper');
-        traceHelper.setChildErrorSpan('extauth', req.header);    
+        traceHelper.setChildErrorSpan('extauth', req.headers);    
     }
     //    
 

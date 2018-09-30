@@ -435,7 +435,7 @@ function sendError(req, res, next, logger, stats, code, message) {
     if (process.env.EDGEMICRO_OPENTRACE) {
         try {
             const traceHelper = require('../microgateway-core/lib/trace-helper');
-            traceHelper.setChildErrorSpan('oauth', req.header);        
+            traceHelper.setChildErrorSpan('oauth', req.headers);        
         } catch (err) {}
     }
     //
