@@ -216,6 +216,13 @@ function sendError(req, res, next, logger, stats, code, message) {
         res: res
     }, 'extauth');
 
+    //opentracing
+    if (process.env.EDGEMICRO_OPENTRACE) {
+        const traceHelper = require('../microgateway-core/lib/trace-helper');
+        traceHelper.setChildErrorSpan('extauth', req.header);    
+    }
+    //    
+
     if (!res.finished) res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify(response));
     stats.incrementStatusCount(res.statusCode);
