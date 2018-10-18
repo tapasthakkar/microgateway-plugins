@@ -330,6 +330,15 @@ function sendError(req, res, next, logger, stats, code, message) {
         res: res
     }, "apikeys");
 
+    //opentracing
+    if (process.env.EDGEMICRO_OPENTRACE) {
+        try {
+            const traceHelper = require('../microgateway-core/lib/trace-helper');
+            traceHelper.setChildErrorSpan('apikeys', req.headers);        
+        } catch (err) {}
+    }
+    //
+
     if (!res.finished) res.setHeader("content-type", "application/json");
     res.end(JSON.stringify(response));
     stats.incrementStatusCount(res.statusCode);

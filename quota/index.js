@@ -59,10 +59,10 @@ module.exports.init = function(config, logger, stats) {
 
         onrequest: function(req, res, next) {
             if (process.env.EDGEMICRO_LOCAL) {
-                middleware(req, res, next);
-            } else {
                 debug("MG running in local mode. Skipping Quota");
-                next();
+                next();                
+            } else {
+                middleware(req, res, next);
             }
         }
 
