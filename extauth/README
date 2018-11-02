@@ -1,4 +1,4 @@
-# extauth plugin
+#extauth plugin
 
 ## Summary
 The purpose of the extauth plugin is to allow customers to BYO-JWT or "bring your own JWT" to Edge Microgateway (EM).  
