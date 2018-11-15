@@ -66,7 +66,7 @@ module.exports.init = function(config, logger, stats) {
     }
 
     var exchangeApiKeyForToken = function(req, res, next, config, logger, stats, middleware, apiKey) {
-        var cacheControl = req.headers["cache-control"];
+        var cacheControl = req.headers["cache-control"] || 'no-control';
         if (cacheKey || (cacheControl && cacheControl.indexOf("no-cache") < 0)) { // caching is allowed
             cache.read(apiKey, function(err, value) {
                 if (value) {
