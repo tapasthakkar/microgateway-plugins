@@ -3,18 +3,18 @@
 var async = require('async');
 var Quota = require('volos-quota-apigee');
 var debug = require('debug')('gateway:quota');
-// const _ = require('lodash');
 
 module.exports.init = function(config, logger, stats) {
 
+    const { product_to_proxy, proxies } = config;
+    const prodsObj = {};
     var quotas = {}; // productName -> connectMiddleware
-    const prodsObj ={};
     var options = {
         key: function(req) {
             return req.token.application_name;
         }
     };
-    const {product_to_proxy, proxies} = config;
+
     Object.keys(config).forEach(function(productName) {
         var product = config[productName];
         if (!product.uri && !product.key && !product.secret && !product.allow && !product.interval || product.interval === "null") {
@@ -23,17 +23,25 @@ module.exports.init = function(config, logger, stats) {
             return;
         }
 
-        var prodProxiesArr = product_to_proxy[productName];
+        const prodProxiesArr = product_to_proxy[productName];
 
-        let prodObj = prodProxiesArr.reduce((acc,val)=>{
-            acc[val]=true;
-            return acc;
-        },{});
+        const prodObj = {};
+        if (Array.isArray(prodProxiesArr)) {
+            prodProxiesArr.reduce((acc, val) => {
+                acc[val] = true;
+                return acc;
+            }, prodObj);
+        }
 
-        const basePaths = proxies.reduce((acc,prox) => {
-            if(prox.name !== 'edgemicro-auth' && prodObj[prox.name] === true) acc[prox.base_path]=true;
-            return acc;
-        },{});
+        const basePaths = {};
+
+        if (Array.isArray(proxies)) {
+            proxies.reduce((acc, prox) => {
+                if (prox.name !== 'edgemicro-auth' && prodObj[prox.name] === true) acc[prox.base_path] = true;
+                return acc;
+            }, basePaths);
+        }
+
         prodObj.basePaths = basePaths;
         prodsObj[productName] = prodObj;
 
@@ -53,14 +61,15 @@ module.exports.init = function(config, logger, stats) {
 
         req.originalUrl = req.originalUrl || req.url; // emulate connect
 
-        let prodList;
-        if(Array.isArray(req.token.api_product_list)) {
-             prodList = req.token.api_product_list.reduce((acc,prod) =>{
-                if(prodsObj[prod].basePaths[req.url]===true) acc.push(prod);
+        const prodList = [];
+        if (Array.isArray(req.token.api_product_list)) {
+            req.token.api_product_list.reduce((acc, prod) => {
+                if (prodsObj[prod].basePaths[req.url] === true) acc.push(prod);
                 return acc;
-             },[]);
-             debug('PRODLIST');
-             debug(prodList);
+            }, prodList);
+
+            debug('prodList');
+            debug(prodList);
         }
 
         // this is arbitrary, but not sure there's a better way?
@@ -86,7 +95,7 @@ module.exports.init = function(config, logger, stats) {
         onrequest: function(req, res, next) {
             if (process.env.EDGEMICRO_LOCAL) {
                 debug("MG running in local mode. Skipping Quota");
-                next();                
+                next();
             } else {
                 middleware(req, res, next);
             }
