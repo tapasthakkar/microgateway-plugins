@@ -21,5 +21,5 @@ module.exports = {
   apikeys: require('./apikeys'),
   oauthv2: require('./oauthv2'),
   extauth: require('./extauth'),
-  content: require('./contentlength')
+  contentlength: require('./contentlength')
 }
