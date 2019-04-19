@@ -22,7 +22,10 @@ module.exports.init = function(config, logger, stats) {
             return;
         }
 
-        config[productName].request = config.request;
+        if(product.timeUnit === 'month') {
+            product.timeUnit === '30days';
+        };
+                config[productName].request = config.request;
         var quota = Quota.create(config[productName]);
         quotas[productName] = quota.connectMiddleware().apply(options);
         debug('created quota for', productName);
