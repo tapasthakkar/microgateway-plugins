@@ -10,20 +10,20 @@ module.exports.init = function(config, logger, stats) {
       // console.log('sourceRequest', Date.now());
       // req.headers['httpLibrary'] = httpntlm;
       if (req.headers['ntlm']) {
-        k += 1;
-        console.log('k', process.pid, k);
+        // k += 1;
+        // console.log('k', process.pid, k);
 
-        res.setHeader('connection', 'close');
-        res.setHeader('connectionk', pidStr + k.toString());
+        // res.setHeader('connection', 'close');
+        // res.setHeader('connectionk', pidStr + k.toString());
         // res.setHeader('ntlm', req.headers['ntlm']);
 
         req.httpLibrary = function(cb, payload) {
-          var keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 2 });
+          let keepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 2 });
           let [usernameNTLM, passwordNTLM] = req.headers['ntlm'].split(':');
-          console.log('usernameNTLM', usernameNTLM);
-          console.log('passwordNTLM', passwordNTLM);
-          console.log('req.targetPath', req.targetPath);
-          console.log('res.proxy', res.proxy);
+          // console.log('usernameNTLM', usernameNTLM);
+          // console.log('passwordNTLM', passwordNTLM);
+          // console.log('req.targetPath', req.targetPath);
+          // console.log('res.proxy', res.proxy);
           var options = {
             url: res.proxy.url,
             username: usernameNTLM,
@@ -43,7 +43,7 @@ module.exports.init = function(config, logger, stats) {
               agent: keepAliveAgent
             },
             resp => {
-              console.log('resp.statusCode1111', resp.statusCode);
+              // console.log('resp.statusCode1111', resp.statusCode);
               resp.on('data', d => {
                 // console.log('d', d);
               });
@@ -64,7 +64,7 @@ module.exports.init = function(config, logger, stats) {
                       agent: keepAliveAgent
                     },
                     resp2 => {
-                      console.log('resp2.statusCode', resp2.statusCode);
+                      // console.log('resp2.statusCode', resp2.statusCode);
 
                       // resp2.headers['connection']='close';
                       // resp2.headers['connectionk']=k.toString();
