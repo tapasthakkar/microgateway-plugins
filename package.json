@@ -1,6 +1,6 @@
 {
   "name": "microgateway-plugins",
-  "version": "2.5.35",
+  "version": "2.5.36",
   "description": "Plugins for Apige Edge Microgateway",
   "main": "index.js",
   "scripts": {
