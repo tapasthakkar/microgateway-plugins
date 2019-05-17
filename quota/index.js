@@ -3,11 +3,12 @@
 var async = require('async');
 var Quota = require('volos-quota-apigee');
 var debug = require('debug')('gateway:quota');
-
+var url = require('url');
 module.exports.init = function(config, logger, stats) {
 
+    const { product_to_proxy, proxies } = config;
+    const prodsObj = {};
     var quotas = {}; // productName -> connectMiddleware
-
     var options = {
         key: function(req) {
             return req.token.application_name;
@@ -25,7 +26,30 @@ module.exports.init = function(config, logger, stats) {
         if(product.timeUnit === 'month') {
             product.timeUnit === '30days';
         };
-                config[productName].request = config.request;
+
+        const prodProxiesArr = product_to_proxy[productName];
+
+        const prodObj = {};
+        if (Array.isArray(prodProxiesArr)) {
+            prodProxiesArr.reduce((acc, val) => {
+                acc[val] = true;
+                return acc;
+            }, prodObj);
+        }
+
+        const basePaths = {};
+
+        if (Array.isArray(proxies)) {
+            proxies.reduce((acc, prox) => {
+                if (prox.name !== 'edgemicro-auth' && prodObj[prox.name] === true) acc[prox.base_path] = true;
+                return acc;
+            }, basePaths);
+        }
+
+        prodObj.basePaths = basePaths;
+        prodsObj[productName] = prodObj;
+
+        config[productName].request = config.request;
         var quota = Quota.create(config[productName]);
         quotas[productName] = quota.connectMiddleware().apply(options);
         debug('created quota for', productName);
@@ -40,9 +64,25 @@ module.exports.init = function(config, logger, stats) {
         debug('quota checking products', req.token.api_product_list);
 
         req.originalUrl = req.originalUrl || req.url; // emulate connect
+        
+        let matchedPathProxy = res.proxy.base_path || url.parse(req.url).pathname || '';
+        debug('matchedPathProxy',matchedPathProxy);
+
+        const prodList = [];
+        if (Array.isArray(req.token.api_product_list)) {
+            req.token.api_product_list.reduce((acc, prod) => {
+                if (prodsObj[prod] && 
+                    prodsObj[prod].basePaths && 
+                    prodsObj[prod].basePaths[matchedPathProxy] === true) acc.push(prod);
+                return acc;
+            }, prodList);
+
+            debug('prodList', prodList);
+        }
 
         // this is arbitrary, but not sure there's a better way?
-        async.eachSeries(req.token.api_product_list,
+        // async.eachSeries(req.token.api_product_list,
+        async.eachSeries(prodList,
             function(productName, cb) {
                 var connectMiddleware = quotas[productName];
                 debug('applying quota for', productName);
@@ -63,7 +103,7 @@ module.exports.init = function(config, logger, stats) {
         onrequest: function(req, res, next) {
             if (process.env.EDGEMICRO_LOCAL) {
                 debug("MG running in local mode. Skipping Quota");
-                next();                
+                next();
             } else {
                 middleware(req, res, next);
             }
