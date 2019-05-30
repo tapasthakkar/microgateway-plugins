@@ -65,7 +65,9 @@ module.exports.init = function(config, logger, stats) {
 
         req.originalUrl = req.originalUrl || req.url; // emulate connect
         
-        let matchedPathProxy = res.proxy.base_path || url.parse(req.url).pathname || '';
+        let proxyPath = res.proxy ? res.proxy.base_path : undefined;
+        let proxyUrl = req.url ? url.parse(req.url).pathname : undefined;
+        let matchedPathProxy = proxyPath || proxyUrl || '';
         debug('matchedPathProxy',matchedPathProxy);
 
         const prodList = [];
