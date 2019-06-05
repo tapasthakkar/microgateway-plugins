@@ -39,3 +39,6 @@ env.sh
 
 #directory for troublesome tests
 test-quarantine
+
+
+.nyc_output
