@@ -197,7 +197,16 @@ module.exports.init = function(config, logger, stats) {
 
         var isValid = false;
         var oauthtoken = token && token.token ? token.token : token;
-        var decodedToken = JWS.parse(oauthtoken);
+                
+        var decodedToken = null;
+        try {
+            decodedToken = JWS.parse(oauthtoken);
+        } catch(e) {
+            // 'invalid_token'
+            return sendError(req, res, next, logger, stats, 'invalid_token','token could not be parsed');
+       }
+
+        
         if (tokenCache == true) {
             debug('token caching enabled')
             map.read(oauthtoken, function(err, tokenvalue) {
