@@ -210,13 +210,17 @@ module.exports.init = function(config, logger, stats) {
                     }
                 } else {
                     debug('token not found in cache');
-                    if (keys) {
-                        debug('using jwk');
-                        var pem = getPEM(decodedToken, keys);
-                        isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
-                    } else {
-                        debug('validating jwt');
-                        isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                    try {
+                        if (keys) {
+                            debug('using jwk');
+                            var pem = getPEM(decodedToken, keys);
+                            isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+                        } else {
+                            debug('validating jwt');
+                            isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                        }                            
+                    } catch (error) {
+                        console.warn('error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {
