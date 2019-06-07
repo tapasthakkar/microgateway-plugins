@@ -5,7 +5,7 @@
 
 var debug = require('debug')('plugin:monitor');
 var path = require('path');
-const memoredpath = path.resolve(__dirname,'../../..')+'/third_party/memored/memored';
+const memoredpath = '../third_party/memored/index';
 var cache = require(memoredpath);
 const lynx = require('lynx');
 
