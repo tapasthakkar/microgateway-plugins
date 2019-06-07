@@ -197,16 +197,15 @@ module.exports.init = function(config, logger, stats) {
 
         var isValid = false;
         var oauthtoken = token && token.token ? token.token : token;
-                
         var decodedToken = null;
+        //
         try {
             decodedToken = JWS.parse(oauthtoken);
         } catch(e) {
             // 'invalid_token'
             return sendError(req, res, next, logger, stats, 'invalid_token','token could not be parsed');
-       }
-
-        
+        }
+        //
         if (tokenCache == true) {
             debug('token caching enabled')
             map.read(oauthtoken, function(err, tokenvalue) {
@@ -219,13 +218,17 @@ module.exports.init = function(config, logger, stats) {
                     }
                 } else {
                     debug('token not found in cache');
-                    if (keys) {
-                        debug('using jwk');
-                        var pem = getPEM(decodedToken, keys);
-                        isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
-                    } else {
-                        debug('validating jwt');
-                        isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                    try {
+                        if (keys) {
+                            debug('using jwk');
+                            var pem = getPEM(decodedToken, keys);
+                            isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+                        } else {
+                            debug('validating jwt');
+                            isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                        }                            
+                    } catch (error) {
+                        console.warn('error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {
@@ -250,13 +253,17 @@ module.exports.init = function(config, logger, stats) {
                 }
             });
         } else {
-            if (keys) {
-                debug('using jwk');
-                var pem = getPEM(decodedToken, keys);
-                isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
-            } else {
-                debug('validating jwt');
-                isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+            try {
+                if (keys) {
+                    debug('using jwk');
+                    var pem = getPEM(decodedToken, keys);
+                    isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+                } else {
+                    debug('validating jwt');
+                    isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                }
+            } catch (error) {
+                console.warn('error parsing jwt: ' + oauthtoken);
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
@@ -271,6 +278,7 @@ module.exports.init = function(config, logger, stats) {
             }
         }
     };
+
 
     return {
 
