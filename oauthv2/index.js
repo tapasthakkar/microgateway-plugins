@@ -5,7 +5,8 @@ var url = require('url');
 var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
-var map = require('memored');
+const memoredpath = '../third_party/memored/index';
+var map = require(memoredpath);
 var JWS = rs.jws.JWS;
 var requestLib = require('request');
 var _ = require('lodash');
@@ -109,13 +110,17 @@ module.exports.init = function(config, logger, stats) {
                     }
                 } else {
                     debug('token not found in cache');
-                    if (keys) {
-                        debug('using jwk');
-                        var pem = getPEM(decodedToken, keys);
-                        isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
-                    } else {
-                        debug('validating jwt');
-                        isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                    try {
+                        if (keys) {
+                            debug('using jwk');
+                            var pem = getPEM(decodedToken, keys);
+                            isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+                        } else {
+                            debug('validating jwt');
+                            isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                        }                            
+                    } catch (error) {
+                        console.warn('error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {

@@ -4,7 +4,9 @@
  */
 
 var debug = require('debug')('plugin:monitor');
-var cache = require('memored');
+var path = require('path');
+const memoredpath = '../third_party/memored/index';
+var cache = require(memoredpath);
 const lynx = require('lynx');
 
 module.exports.init = function(config, logger, stats) {
