@@ -1,16 +1,17 @@
 const quota = require('../quota/index');
 const assert = require('assert');
 
+// TODO: this config format is incorrect, revist use of env vars in this test
 var exampleConfig = { 
-  EdgeMicroTestProduct: {
-    allow: process.env.QUOTA_ALLOW,
-    interval: Number(process.env.QUOTA_INTERVAL),
-    timeUnit: process.env.QUOTA_TIMEUNIT,
-    bufferSize: process.env.QUOTA_BUFFERSIZE,
-    uri: process.env.QUOTA_URI,
-    key: process.env.QUOTA_KEY,
-    secret: process.env.QUOTA_SECRET 
-  }
+  // EdgeMicroTestProduct: {
+  //   allow: process.env.QUOTA_ALLOW,
+  //   interval: Number(process.env.QUOTA_INTERVAL),
+  //   timeUnit: process.env.QUOTA_TIMEUNIT,
+  //   bufferSize: process.env.QUOTA_BUFFERSIZE,
+  //   uri: process.env.QUOTA_URI,
+  //   key: process.env.QUOTA_KEY,
+  //   secret: process.env.QUOTA_SECRET 
+  // }
 }
 
 describe('quota plugin', () => {
