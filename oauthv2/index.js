@@ -135,7 +135,7 @@ module.exports.init = function(config, logger, stats) {
                     if (tokenvalue == null || tokenvalue == undefined) {
                         map.size(function(err, sizevalue) {
                             if (!err && sizevalue != null && sizevalue < tokenCacheSize) {
-                                map.store(oauthtoken, oauthtoken);
+                                map.store(oauthtoken, oauthtoken, decodedToken.payloadObj.exp);
                             } else {
                                 debug('too many tokens in cache; ignore storing token');
                             }
