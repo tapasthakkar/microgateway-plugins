@@ -176,7 +176,11 @@ module.exports.init = function(config, logger, stats) {
             } else {
                 middleware(req, res, next);
             }
-        }
+        },
+
+        testing: {
+            ejectToken,
+        },
     };
 
     function authorize(req, res, next, logger, stats, decodedToken) {
@@ -278,15 +282,10 @@ function getPEM(decodedToken, keys) {
     return rs.KEYUTIL.getPEM(publickey);
 }
 
-function ejectToken(expTimestamp) {
+function ejectToken(expTimestampInSeconds) {
     var currentTimestampInSeconds = new Date().getTime() / 1000;
-    var timeDifferenceInSeconds = (expTimestamp - currentTimestampInSeconds);
-
-    if (Math.abs(timeDifferenceInSeconds) <= parseInt(acceptField.gracePeriod)) {
-        return true;
-    } else {
-        return false;
-    }
+    var gracePeriod = parseInt(acceptField.gracePeriod)
+    return currentTimestampInSeconds > expTimestampInSeconds + gracePeriod
 }
 
 function sendError(req, res, next, logger, stats, code, message) {
