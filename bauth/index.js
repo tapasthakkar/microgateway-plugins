@@ -75,9 +75,9 @@ function sendError(req, res, next, logger, stats, code, message) {
     error: code,
     error_description: message
   };
-
+	const err = Error('auth failure');
   debug('auth failure', res.statusCode, code, message ? message : '', req.headers, req.method, req.url);
-  logger.error({ req: req, res: res }, 'oauth');
+  logger.eventLog({level:'error', req: req, res: res, err:err, component:'bauth' }, 'bauth');
 
   if (!res.finished) res.setHeader('content-type', 'application/json');
   res.end(JSON.stringify(response));

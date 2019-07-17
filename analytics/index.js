@@ -52,7 +52,7 @@ module.exports.init = function(config, logger /*, stats */) {
         try {
             cb(null, record);
         } catch (e) {
-            logger.error("Error encountered processing Apigee analytics.  Allowing request processing to continue", e);
+            logger.eventLog({level:'error', req: req, res: res, err:e, component:'analytics' },"Error encountered processing Apigee analytics.  Allowing request processing to continue");
         }
     };
 
