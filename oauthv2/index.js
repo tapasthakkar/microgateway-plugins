@@ -89,7 +89,7 @@ module.exports.init = function(config, logger, stats) {
 			decodedToken = JWS.parse(oauthtoken);
 		} catch (err) {
             if (config.allowInvalidAuthorization) {
-                console.warn('ignoring err');
+                logger.consoleLog('warn', 'ignoring err');
                 return next();
             } else {
                 debug('invalid token');
@@ -119,12 +119,12 @@ module.exports.init = function(config, logger, stats) {
                             isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                         }
                     } catch (error) {
-                        console.warn('error parsing jwt: ' + oauthtoken);
+                        logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {
                     if (config.allowInvalidAuthorization) {
-                        console.warn('ignoring err');
+                        logger.consoleLog('warn', 'ignoring err');
                         return next();
                     } else {
                         debug('invalid token');
@@ -154,11 +154,13 @@ module.exports.init = function(config, logger, stats) {
                     isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                 }
             } catch (error) {
-                console.warn('error parsing jwt: ' + oauthtoken);
+                // TODO: convert to logger.eventLog
+                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
-                    console.warn('ignoring err');
+                    // TODO: convert to logger.eventLog
+                    logger.consoleLog('warn', 'ignoring err');
                     return next();
                 } else {
                     debug('invalid token');

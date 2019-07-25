@@ -136,7 +136,7 @@ module.exports.init = function(config, logger, stats) {
             }
             if (response.statusCode !== 200) {
 				if (config.allowInvalidAuthorization) {
-					console.warn("ignoring err");
+                    logger.consoleLog('warn', "ignoring err");  // TODO: convert to logger.eventLog
 					return next();
 				} else {
 	                debug("verify apikey access_denied");
@@ -164,7 +164,7 @@ module.exports.init = function(config, logger, stats) {
         }
         if (!isValid) {
             if (config.allowInvalidAuthorization) {
-                console.warn("ignoring err");
+                logger.consoleLog('warn', "ignoring err");  // TODO: convert to logger.eventLog
                 return next();
             } else {
                 debug("invalid token");
