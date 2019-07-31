@@ -41,7 +41,7 @@ module.exports.init = function(config, logger, stats) {
     }, function(err, response, body) {
         if (err) {
             debug('publickey gateway timeout');
-            console.log(err);
+            logger.consoleLog('log', err);  // TODO: convert to logger.eventLog
         } else {
             debug("loaded public keys");
             if (keyType === 'jwk') {

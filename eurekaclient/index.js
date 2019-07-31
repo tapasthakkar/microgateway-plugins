@@ -11,7 +11,7 @@ var os = require('os');
 const port = process.env.PORT || 8000;
 const Eureka = require('eureka-js-client').Eureka;
 
-module.exports.init = function (config /*, logger, stats */) {
+module.exports.init = function (config , logger, /* stats */) {
 
   //const lookup = config.servicemap;
   
@@ -28,7 +28,7 @@ module.exports.init = function (config /*, logger, stats */) {
   try {
     client.start();  
   } catch (err) {
-    console.error(err);
+    logger.consoleLog('error', err);  // TODO: convert to logger.eventLog
     client.stop();
   }
 
@@ -87,7 +87,7 @@ module.exports.init = function (config /*, logger, stats */) {
           req.targetSecure = false;
         }        
       } else {
-        console.warn("Target endpoint from Eureka not found");
+        logger.consoleLog('warn', "Target endpoint from Eureka not found"); // TODO: convert to logger.eventLog
       }
       next();
     }   

@@ -237,12 +237,12 @@ module.exports.init = function(config, logger, stats) {
                             isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                         }                            
                     } catch (error) {
-                        console.warn('error parsing jwt: ' + oauthtoken);
+                        logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {
                     if (config.allowInvalidAuthorization) {
-                        console.warn('ignoring err');
+                        logger.consoleLog('warn', 'ignoring err')
                         return next();
                     } else {
                         debug('invalid token');
@@ -272,11 +272,11 @@ module.exports.init = function(config, logger, stats) {
                     isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                 }
             } catch (error) {
-                console.warn('error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
-                    console.warn('ignoring err');
+                    logger.consoleLog('warn', 'ignoring err');
                     return next();
                 } else {
                     debug('invalid token');
@@ -493,20 +493,23 @@ function sendError(req, res, next, logger, stats, code, message) {
         try {
             res.setHeader('content-type', 'application/json');
         } catch (e) {
-            console.warn("oath response object lacks setHeader")
+            // TODO: convert to logger.eventLog
+            logger.consoleLog('warn', "oath response object lacks setHeader");
         }
     }
 
     try {
         res.end(JSON.stringify(response));
     } catch (e) {
-        console.warn("oath response object is not supplied by runtime")
+        // TODO: convert to logger.eventLog
+        logger.consoleLog('warn', "oath response object is not supplied by runtime");
     }
     
     try {
         stats.incrementStatusCount(res.statusCode);
     } catch (e) {
-        console.warn("oath stats object is not supplied by runtime")
+        // TODO: convert to logger.eventLog
+        logger.consoleLog('warn', "oath stats object is not supplied by runtime");
     }
     
     next(code, message);
