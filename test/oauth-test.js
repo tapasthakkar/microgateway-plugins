@@ -5,6 +5,9 @@ const assert = require('assert');
 const denv = require('dotenv');
 denv.config();
 
+const coreObject = require('./microgateway-core');
+const logger = coreObject.logger;
+const stats = coreObject.stats;
 
 var oauthConfiigDefaults = {
   "authorization-header" : "authorization",
@@ -71,8 +74,6 @@ describe('oauth plugin', function() {
   })
 
   it('will not initialize without a well formed config',(done) => {
-    var logger = {};
-    var stats = {};
 
     var myplugin = oauth.init(undefined, logger, stats);
     assert(myplugin === undefined)
@@ -84,8 +85,7 @@ describe('oauth plugin', function() {
   })
  
   it('exposes an onrequest handler', (done) => {
-    var logger = {};
-    var stats = {};
+
     //
     var pluginT = oauth.init(oauthConfiigDefaults, logger, stats);
     assert.ok(pluginT.onrequest);
@@ -96,8 +96,6 @@ describe('oauth plugin', function() {
   it('runs in local mode',(done) => {
     //
     process.env.EDGEMICRO_LOCAL = "1"
-    var logger = {};
-    var stats = {};
 
     var req = null;
     var res = null;
@@ -113,8 +111,6 @@ describe('oauth plugin', function() {
 
   it('takes a default config and bad req and res',(done) => {
     // 
-    var logger = {};
-    var stats = {};
     var req = null;
     var res = null;
     //
@@ -150,8 +146,6 @@ describe('oauth plugin', function() {
 
   it('req and res are empty and default config ', (done) => {
     // 
-    var logger = {};
-    var stats = {};
     //
     var req = {
       headers : {}
@@ -187,11 +181,6 @@ describe('oauth plugin', function() {
   // should be identical for these tests
   var modules = { oauth, oauthv2 }
   for (var name in modules) {
-
-
-    const logger = {}
-    const stats = {}
-
 
     describe(name, function() {
 
