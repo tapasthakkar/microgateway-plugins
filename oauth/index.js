@@ -18,6 +18,8 @@ const SUPPORTED_DOUBLE_ASTERIK_PATTERN = "**";
 const SUPPORTED_SINGLE_ASTERIK_PATTERN = "*";
 // const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";
 
+const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins oauth';
+
 const acceptAlg = ['RS256'];
 
 var acceptField = {};
@@ -237,12 +239,12 @@ module.exports.init = function(config, logger, stats) {
                             isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                         }                            
                     } catch (error) {
-                        logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+                        logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {
                     if (config.allowInvalidAuthorization) {
-                        logger.consoleLog('warn', 'ignoring err')
+                        logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'ignoring err')
                         return next();
                     } else {
                         debug('invalid token');
@@ -272,11 +274,11 @@ module.exports.init = function(config, logger, stats) {
                     isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                 }
             } catch (error) {
-                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
-                    logger.consoleLog('warn', 'ignoring err');
+                    logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'ignoring err');
                     return next();
                 } else {
                     debug('invalid token');
@@ -494,7 +496,7 @@ function sendError(req, res, next, logger, stats, code, message) {
             res.setHeader('content-type', 'application/json');
         } catch (e) {
             // TODO: convert to logger.eventLog
-            logger.consoleLog('warn', "oath response object lacks setHeader");
+            logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, "oath response object lacks setHeader");
         }
     }
 
@@ -502,14 +504,14 @@ function sendError(req, res, next, logger, stats, code, message) {
         res.end(JSON.stringify(response));
     } catch (e) {
         // TODO: convert to logger.eventLog
-        logger.consoleLog('warn', "oath response object is not supplied by runtime");
+        logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, "oath response object is not supplied by runtime");
     }
     
     try {
         stats.incrementStatusCount(res.statusCode);
     } catch (e) {
         // TODO: convert to logger.eventLog
-        logger.consoleLog('warn', "oath stats object is not supplied by runtime");
+        logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, "oath stats object is not supplied by runtime");
     }
     
     next(code, message);

@@ -15,6 +15,8 @@ const SUPPORTED_DOUBLE_ASTERIK_PATTERN = "**";
 const SUPPORTED_SINGLE_ASTERIK_PATTERN = "*";
 //const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";
 
+const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins oauthv2';
+
 const acceptAlg = ['RS256'];
 
 var acceptField = {};
@@ -89,7 +91,7 @@ module.exports.init = function(config, logger, stats) {
 			decodedToken = JWS.parse(oauthtoken);
 		} catch (err) {
             if (config.allowInvalidAuthorization) {
-                logger.consoleLog('warn', 'ignoring err');
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'ignoring err');
                 return next();
             } else {
                 debug('invalid token');
@@ -119,12 +121,12 @@ module.exports.init = function(config, logger, stats) {
                             isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                         }
                     } catch (error) {
-                        logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+                        logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
                     }
                 }
                 if (!isValid) {
                     if (config.allowInvalidAuthorization) {
-                        logger.consoleLog('warn', 'ignoring err');
+                        logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'ignoring err');
                         return next();
                     } else {
                         debug('invalid token');
@@ -155,12 +157,12 @@ module.exports.init = function(config, logger, stats) {
                 }
             } catch (error) {
                 // TODO: convert to logger.eventLog
-                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
                     // TODO: convert to logger.eventLog
-                    logger.consoleLog('warn', 'ignoring err');
+                    logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'ignoring err');
                     return next();
                 } else {
                     debug('invalid token');

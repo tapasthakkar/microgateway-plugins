@@ -13,6 +13,7 @@ const acceptAlg = ['RS256'];
 
 var acceptField = {};
 acceptField.alg = acceptAlg;
+const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins extauth';
 
 module.exports.init = function(config, logger, stats) {
 
@@ -41,7 +42,7 @@ module.exports.init = function(config, logger, stats) {
     }, function(err, response, body) {
         if (err) {
             debug('publickey gateway timeout');
-            logger.consoleLog('log', err);  // TODO: convert to logger.eventLog
+            logger.consoleLog('log',{component: CONSOLE_LOG_TAG_COMP}, err);
         } else {
             debug("loaded public keys");
             if (keyType === 'jwk') {

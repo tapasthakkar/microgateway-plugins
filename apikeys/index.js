@@ -24,6 +24,8 @@ acceptField.alg = acceptAlg;
 var productOnly;
 var cacheKey = false;
 
+const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins apikeys';
+
 module.exports.init = function(config, logger, stats) {
 
     var request = config.request ? requestLib.defaults(config.request) : requestLib;
@@ -136,7 +138,7 @@ module.exports.init = function(config, logger, stats) {
             }
             if (response.statusCode !== 200) {
 				if (config.allowInvalidAuthorization) {
-                    logger.consoleLog('warn', "ignoring err");  // TODO: convert to logger.eventLog
+                    logger.consoleLog('warn',{component: CONSOLE_LOG_TAG_COMP}, "ignoring err");  // TODO: convert to logger.eventLog
 					return next();
 				} else {
 	                debug("verify apikey access_denied");
@@ -164,7 +166,7 @@ module.exports.init = function(config, logger, stats) {
         }
         if (!isValid) {
             if (config.allowInvalidAuthorization) {
-                logger.consoleLog('warn', "ignoring err");  // TODO: convert to logger.eventLog
+                logger.consoleLog('warn',{component: CONSOLE_LOG_TAG_COMP}, "ignoring err");  // TODO: convert to logger.eventLog
                 return next();
             } else {
                 debug("invalid token");
