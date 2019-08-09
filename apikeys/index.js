@@ -111,12 +111,16 @@ module.exports.init = function(config, logger, stats) {
         if (config.agentOptions) {
             if (config.agentOptions.requestCert) {
                 api_key_options.requestCert = true;
-                if (config.agentOptions.cert && config.agentOptions.key) {
-                    api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.key), "utf8");
-                    api_key_options.cert = fs.readFileSync(path.resolve(config.agentOptions.cert), "utf8");
-                    if (config.agentOptions.ca) api_key_options.ca = fs.readFileSync(path.resolve(config.agentOptions.ca), "utf8");
-                } else if (config.agentOptions.pfx) {
-                    api_key_options.pfx = fs.readFileSync(path.resolve(config.agentOptions.pfx));
+                try {
+                    if (config.agentOptions.cert && config.agentOptions.key) {
+                        api_key_options.key = fs.readFileSync(path.resolve(config.agentOptions.key), "utf8");
+                        api_key_options.cert = fs.readFileSync(path.resolve(config.agentOptions.cert), "utf8");
+                        if (config.agentOptions.ca) api_key_options.ca = fs.readFileSync(path.resolve(config.agentOptions.ca), "utf8");
+                    } else if (config.agentOptions.pfx) {
+                        api_key_options.pfx = fs.readFileSync(path.resolve(config.agentOptions.pfx));
+                    }    
+                } catch (e) {
+                    logger.consoleLog('warn', "apikeys plugin could not load key file");  // TODO: convert to logger.eventLog
                 }
                 if (config.agentOptions.rejectUnauthorized) {
                     api_key_options.rejectUnauthorized = true;
@@ -153,16 +157,29 @@ module.exports.init = function(config, logger, stats) {
 
         var isValid = false;
         var oauthtoken = token && token.token ? token.token : token;
-        var decodedToken = JWS.parse(oauthtoken);
+        var decodedToken = {}
+        try {
+            decodedToken = JWS.parse(oauthtoken);
+        } catch(e) {
+            return sendError(req, res, next, logger, stats, "access_denied", 'apikeys plugin failed to parse token in verify');
+        }
         debug(decodedToken)
         if (keys) {
             debug("using jwk");
             var pem = getPEM(decodedToken, keys);
-            isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+            try {
+                isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
+            } catch (error) {
+                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+            }
         } else {
             debug("validating jwt");
             debug(config.public_key)
-            isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+            try {
+                isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+            } catch (error) {
+                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+            }
         }
         if (!isValid) {
             if (config.allowInvalidAuthorization) {

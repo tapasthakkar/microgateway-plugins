@@ -37,7 +37,7 @@ module.exports.init = function(config, logger, stats) {
         acceptField.iss[0] = iss;
     }
 
-    request({
+    request({  // The middleware is supposed to be called much later
         url: publickey_url,
         method: 'GET'
     }, function(err, response, body) {
@@ -48,7 +48,11 @@ module.exports.init = function(config, logger, stats) {
             debug("loaded public keys");
             if (keyType === 'jwk') {
                 debug("keyType is jwk");
-                publickeys = JSON.parse(body);
+                try {
+                    publickeys = JSON.parse(body);
+                } catch(e) {
+                    logger.consoleLog('log', e.message );  // TODO: convert to logger.eventLog
+                }                
             } else {
                 //the body should contain a single pem
                 publickeys = body;
@@ -78,10 +82,18 @@ module.exports.init = function(config, logger, stats) {
         if (exp) {
             debug("JWT Expiry enabled");
             acceptField.verifyAt = rs.KJUR.jws.IntDate.getNow();
-            isValid = rs.jws.JWS.verifyJWT(payload, pem, acceptField);
+            try {
+                isValid = rs.jws.JWS.verifyJWT(payload, pem, acceptField);
+            } catch(e) {
+                logger.consoleLog('log', e.message );  // TODO: convert to logger.eventLog
+            }
         } else {
             debug("JWT Expiry disabled");
-            isValid = rs.jws.JWS.verify(payload, pem, acceptAlg);
+            try {
+                isValid = rs.jws.JWS.verify(payload, pem, acceptAlg);
+            } catch(e) {
+                logger.consoleLog('log', e.message );  // TODO: convert to logger.eventLog
+            }
         }
         return isValid;
     }
