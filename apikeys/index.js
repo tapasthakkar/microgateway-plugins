@@ -24,7 +24,7 @@ acceptField.alg = acceptAlg;
 var productOnly;
 var cacheKey = false;
 
-const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins apikeys';
+const LOG_TAG_COMP = 'apikeys';
 
 module.exports.init = function(config, logger, stats) {
 
@@ -138,7 +138,7 @@ module.exports.init = function(config, logger, stats) {
             }
             if (response.statusCode !== 200) {
 				if (config.allowInvalidAuthorization) {
-                    logger.consoleLog('warn',{component: CONSOLE_LOG_TAG_COMP}, "ignoring err");  // TODO: convert to logger.eventLog
+                    logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, "ignoring err in requestApiKeyJWT");
 					return next();
 				} else {
 	                debug("verify apikey access_denied");
@@ -166,7 +166,7 @@ module.exports.init = function(config, logger, stats) {
         }
         if (!isValid) {
             if (config.allowInvalidAuthorization) {
-                logger.consoleLog('warn',{component: CONSOLE_LOG_TAG_COMP}, "ignoring err");  // TODO: convert to logger.eventLog
+                logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "ignoring err in verify");
                 return next();
             } else {
                 debug("invalid token");
@@ -341,7 +341,7 @@ function sendError(req, res, next, logger, stats, code, message) {
 
     debug("auth failure", res.statusCode, code, message ? message : "", req.headers, req.method, req.url);
     const err = Error('auth failure');
-    logger.eventLog({level:'error', req: req, res: res, err:err, component:'apikeys' }, "apikeys");
+    logger.eventLog({level:'error', req: req, res: res, err:err, component:LOG_TAG_COMP }, message);
 
     //opentracing
     if (process.env.EDGEMICRO_OPENTRACE) {
