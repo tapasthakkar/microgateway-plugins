@@ -51,7 +51,7 @@ module.exports.init = function(config, logger, stats) {
                 try {
                     publickeys = JSON.parse(body);
                 } catch(e) {
-                    logger.consoleLog('log', e.message );  // TODO: convert to logger.eventLog
+                    logger.consoleLog('log', {component: CONSOLE_LOG_TAG_COMP}, e.message );
                 }                
             } else {
                 //the body should contain a single pem
@@ -85,14 +85,14 @@ module.exports.init = function(config, logger, stats) {
             try {
                 isValid = rs.jws.JWS.verifyJWT(payload, pem, acceptField);
             } catch(e) {
-                logger.consoleLog('log', e.message );  // TODO: convert to logger.eventLog
+                logger.consoleLog('log', {component: CONSOLE_LOG_TAG_COMP}, e.message );
             }
         } else {
             debug("JWT Expiry disabled");
             try {
                 isValid = rs.jws.JWS.verify(payload, pem, acceptAlg);
             } catch(e) {
-                logger.consoleLog('log', e.message );  // TODO: convert to logger.eventLog
+                logger.consoleLog('log', {component: CONSOLE_LOG_TAG_COMP}, e.message );
             }
         }
         return isValid;
