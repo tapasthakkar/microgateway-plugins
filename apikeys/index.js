@@ -25,6 +25,7 @@ var productOnly;
 var cacheKey = false;
 
 const LOG_TAG_COMP = 'apikeys';
+const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins apikeys';
 
 module.exports.init = function(config, logger, stats) {
 
@@ -120,7 +121,7 @@ module.exports.init = function(config, logger, stats) {
                         api_key_options.pfx = fs.readFileSync(path.resolve(config.agentOptions.pfx));
                     }    
                 } catch (e) {
-                    logger.consoleLog('warn', "apikeys plugin could not load key file");  // TODO: convert to logger.eventLog
+                    logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, "apikeys plugin could not load key file");
                 }
                 if (config.agentOptions.rejectUnauthorized) {
                     api_key_options.rejectUnauthorized = true;
@@ -170,7 +171,7 @@ module.exports.init = function(config, logger, stats) {
             try {
                 isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
             } catch (error) {
-                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
             }
         } else {
             debug("validating jwt");
@@ -178,7 +179,7 @@ module.exports.init = function(config, logger, stats) {
             try {
                 isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
             } catch (error) {
-                logger.consoleLog('warn', 'error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
             }
         }
         if (!isValid) {
