@@ -95,7 +95,7 @@ module.exports.init = function(config, logger, stats) {
                 return next();
             } else {
                 debug('invalid token');
-                return sendError(req, res, next, logger, stats, 'access_denied', 'invalid_token');
+                return sendError(req, res, next, logger, stats, 'invalid_token', 'invalid_token');
             }
 		}
         
@@ -130,7 +130,7 @@ module.exports.init = function(config, logger, stats) {
                         return next();
                     } else {
                         debug('invalid token');
-                        return sendError(req, res, next, logger, stats,'access_denied', 'invalid_token');
+                        return sendError(req, res, next, logger, stats,'invalid_token', 'invalid_token');
                     }
                 } else {
                     if (tokenvalue === null || tokenvalue === undefined) {
@@ -164,7 +164,7 @@ module.exports.init = function(config, logger, stats) {
                     return next();
                 } else {
                     debug('invalid token');
-                    return sendError(req, res, next, logger, stats, 'access_denied', 'invalid_token');
+                    return sendError(req, res, next, logger, stats, 'invalid_token', 'invalid_token');
                 }
             } else {
                 authorize(req, res, next, logger, stats, decodedToken.payloadObj);
