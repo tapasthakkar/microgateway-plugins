@@ -17,7 +17,7 @@ module.exports.init = function(config /*, logger, stats */) {
     var quotas = {}; // productName -> connectMiddleware
     var options = {
         key: function(req) {
-            return req.token.application_name;
+            return req.token.application_name+'.'+req.productName;
         }
     };
 
@@ -104,6 +104,7 @@ module.exports.init = function(config /*, logger, stats */) {
             function(productName, cb) {
                 var connectMiddleware = quotas[productName];
                 debug('applying quota for', productName);
+                req['productName'] = productName; // to be used for quota identifier generation
                 if ( connectMiddleware ){  connectMiddleware(req, res, cb) } else cb();
             },
             function(err) {
