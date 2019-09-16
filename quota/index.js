@@ -6,12 +6,21 @@
 
 var async = require('async');
 var Quota = require('volos-quota-apigee');
-var debug = require('debug')('gateway:quota');
+var debugTerminal = require('debug')('gateway:quota');
 var url = require('url');
+const util = require('util');
 
 
-module.exports.init = function(config /*, logger, stats */) {
+module.exports.init = function(config, logger /*, stats */) {
 
+    const debug = (...data) => {
+        const formatedData = util.format(...data);
+        logger.debug('quota : '+formatedData);
+        debugTerminal(formatedData);
+    }
+
+    debug('quota plugin init called with config: %j', config)
+    
     const { product_to_proxy, proxies } = config;
     const prodsObj = {};
     var quotas = {}; // productName -> connectMiddleware
@@ -33,7 +42,7 @@ module.exports.init = function(config /*, logger, stats */) {
         var product = config[productName];
         if (!product.uri && !product.key && !product.secret && !product.allow && !product.interval || product.interval === "null") {
             // skip non-quota config
-            debug('Quota not configured on the API product, skipping. This message is safe to ignore');
+            debug('Quota not configured on the API product: %s, skipping. This message is safe to ignore',productName);
             return;
         }
 
@@ -64,6 +73,7 @@ module.exports.init = function(config /*, logger, stats */) {
         prodsObj[productName] = prodObj;
 
         config[productName].request = config.request;
+        config[productName]['debug'] = debug;
         var quota = Quota.create(config[productName]);
         quotas[productName] = quota.connectMiddleware().apply(options);
         //
@@ -77,7 +87,7 @@ module.exports.init = function(config /*, logger, stats */) {
             return next();
         }
 
-        debug('quota checking products', req.token.api_product_list);
+        debug('New request, quota checking products', req.token.api_product_list);
 
         req.originalUrl = req.originalUrl || req.url; // emulate connect
         

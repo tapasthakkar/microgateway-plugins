@@ -2918,15 +2918,15 @@
       }
     },
     "volos-quota-apigee": {
-      "version": "0.13.3",
-      "resolved": "https://registry.npmjs.org/volos-quota-apigee/-/volos-quota-apigee-0.13.3.tgz",
-      "integrity": "sha512-jgMbqfF7llGAkPN91SapKP2M5ropURhut5+ktccYZo/9Z48tVeGithXI5nka+k08zIlCbfIzWnA7agSt+4Vudg==",
+      "version": "0.13.4",
+      "resolved": "https://registry.npmjs.org/volos-quota-apigee/-/volos-quota-apigee-0.13.4.tgz",
+      "integrity": "sha512-ivfVWSBfhWwBzXcQHtYH6FNoZ8Hijjh3HSw8nG1ug94dUHUh/98wgyilLtL+TMk3c5tSvUgT+Z9M/uZnR+edUA==",
       "requires": {
         "apigee-access": ">=1.2.x",
         "debug": "^2.2.0",
         "request": "^2.6.0",
         "semver": "3.x.x",
-        "volos-quota-common": "0.11.x"
+        "volos-quota-common": "^0.11.8"
       },
       "dependencies": {
         "debug": {
@@ -2950,9 +2950,9 @@
       }
     },
     "volos-quota-common": {
-      "version": "0.11.7",
-      "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.7.tgz",
-      "integrity": "sha512-GTikXZAcd70vio+kyjBUfWOKc/7p8kyhbOyZvOGTMyKJrnJPkg5tJXs03daxfEZ4wG6dycsldNHdWURYrbLwAg==",
+      "version": "0.11.8",
+      "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.8.tgz",
+      "integrity": "sha512-Np3I7F1SiKzaPcE9c38c1PWQOJOx4FEur1dPldZp28rGtklx/yUg8GqEOdtie2dTJqwPvf8QlXQUb9G/4JhPiQ==",
       "requires": {
         "debug": "^2.2.0",
         "underscore": "1.6.x"
