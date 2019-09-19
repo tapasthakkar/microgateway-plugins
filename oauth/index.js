@@ -171,6 +171,14 @@ module.exports.init = function(config, logger, stats) {
                 'x-dna-api-key': apiKey
             }
         };
+        
+        if( config.key && config.secret) {
+            api_key_options['auth']= {
+              user: config.key,
+              pass: config.secret,
+              sendImmediately: true
+            }
+        }
 
         if (config.agentOptions) {
             if (config.agentOptions.requestCert) {

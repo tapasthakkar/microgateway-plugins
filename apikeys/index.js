@@ -109,6 +109,14 @@ module.exports.init = function(config, logger, stats) {
             }
         };
 
+        if( config.key && config.secret) {
+            api_key_options['auth']= {
+              user: config.key,
+              pass: config.secret,
+              sendImmediately: true
+            }
+        }
+        
         if (config.agentOptions) {
             if (config.agentOptions.requestCert) {
                 api_key_options.requestCert = true;
