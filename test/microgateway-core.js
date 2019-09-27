@@ -2,6 +2,8 @@
 /* simulating the objects of microgateway-core to avoid run time errors in travis. */
 module.exports = {
     logger: {
+        debug: function (obj, msg) { },
+        trace: function (obj, msg) { },
         info: function (obj, msg) { },
         warn: function (obj, msg) { },
         error: function (obj, msg) {},
