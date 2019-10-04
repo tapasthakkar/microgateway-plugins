@@ -6,9 +6,14 @@ var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
 const memoredpath = '../third_party/memored/index';
-var cache = require(memoredpath);
-var map = require(memoredpath);
-var sharedMemory = require(memoredpath);
+var sharedMemoryCache = require(memoredpath);
+
+//creating aliases for apiKeyCache and validTokenCache for readability
+//both the apiKeyCache and the validTokenCache point to the same 
+//instance of shared memory cache
+const apiKeyCache = sharedMemoryCache;
+const validTokenCache = sharedMemoryCache;
+
 var JWS = rs.jws.JWS;
 var requestLib = require('request');
 var _ = require('lodash');
@@ -30,7 +35,7 @@ var productOnly;
 var cacheKey = false;
 //setup cache for oauth tokens
 var tokenCache = false;
-map.setup({
+sharedMemoryCache.setup({
     purgeInterval: 10000
 });
 
@@ -48,8 +53,8 @@ module.exports.init = function(config, logger, stats) {
     var keys = config.jwk_keys ? JSON.parse(config.jwk_keys) : null;
 
     let failopenGraceInterval = 0;
-    let failOpenGraceTimeExp = null;
     let isFailOpen = false;
+    let gracePeriod = 0;
 
     var middleware = function(req, res, next) {
 
@@ -61,7 +66,7 @@ module.exports.init = function(config, logger, stats) {
         var keepAuthHeader = config.hasOwnProperty('keep-authorization-header') ? config['keep-authorization-header'] : false;
         cacheKey = config.hasOwnProperty('cacheKey') ? config.cacheKey : false;
         //set grace period
-        var gracePeriod = config.hasOwnProperty('gracePeriod') ? config.gracePeriod : 0;
+        gracePeriod = config.hasOwnProperty('gracePeriod') ? config.gracePeriod : 0;
         acceptField.gracePeriod = gracePeriod;
         //support for enabling oauth or api key only
         var oauth_only = config.hasOwnProperty('allowOAuthOnly') ? config.allowOAuthOnly : false;
@@ -144,26 +149,17 @@ module.exports.init = function(config, logger, stats) {
     var exchangeApiKeyForToken = function(req, res, next, config, logger, stats, middleware, apiKey) {
         var cacheControl = req.headers['cache-control'] || 'no-cache';
         if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
-            cache.read(apiKey, function(err, value) {
+            apiKeyCache.read(apiKey, function(err, value) {
                 if (value) {
                     if (Date.now() / 1000 < value.exp) { // not expired yet (token expiration is in seconds)
                         debug('api key cache hit', apiKey);
                         return authorize(req, res, next, logger, stats, value);
                     } else {
                         if ( isFailOpen === true  && failopenGraceInterval ) {
-                            debug('api key cache expired, using failopen', apiKey);
-                            if (!failOpenGraceTimeExp) {
-                                // read if interval is already started by another worker
-                                sharedMemory.read('failOpenGraceTimeExp',function(err, failopengracetimeExp) {
-                                    failOpenGraceTimeExp = failopengracetimeExp;
-                                    requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey, value);
-                                });
-                            }else {
-                                requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey, value);
-                            }
-                            
+                            debug('api key expired, using failopen', apiKey);
+                            requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey, value);
                         } else {
-                            cache.remove(apiKey);
+                            apiKeyCache.remove(apiKey);
                             debug('api key cache expired', apiKey);
                             requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey);
                         }
@@ -226,25 +222,23 @@ module.exports.init = function(config, logger, stats) {
         }
         //debug(api_key_options);
         request(api_key_options, function(err, response, body) {
+            if ( !err && !response)  {
+                debug('empty response received from verify apikey call');
+                return sendError(req, res, next, logger, stats, 'internal_server_error', 'empty response received');
+            }
             if ( isFailOpen === true &&  oldToken ) {
                 if ( err || parseInt(response.statusCode/100) === 5 ) {
-                    if ( !failOpenGraceTimeExp ) { // start the failopen grace interval if not already started
-                        failOpenGraceTimeExp = Date.now() + failopenGraceInterval*1000; // sec to ms
-                        sharedMemory.store('failOpenGraceTimeExp',failOpenGraceTimeExp); // share across workers
-                        logger.eventLog({level:'debug', req: req, res: res, err:null, component:LOG_TAG_COMP }, "using failOpen and starting fail open GraceInterval, failOpenGraceTimeExp="+failOpenGraceTimeExp);
-                    }
-                    if ( Date.now() < failOpenGraceTimeExp ) {
-                        req['failed-open'] = true; // pass the flag to next plugins
+                    if ( Date.now() / 1000 < ( oldToken.exp + ( gracePeriod + failopenGraceInterval )*1000 ) ) { // cache should have been expired but adding manual handling
+                        req['oauth-failed-open'] = true; // pass the flag to next plugins
                         debug('failed-open set to true for apiKey: %s',apiKey);
                         logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "failed-open set to true due for apiKey:"+apiKey);
                         return authorize(req, res, next, logger, stats, oldToken); // use old token for failopenGraceInterval if 5XX
+                    } else {
+                        debug('not failing open as fail open grace time has expired for apiKey: %s', apiKey);
                     }
                 } else {
-                    // api is success now, remove expired token from cache and stop the failopen grace interval
-                    failOpenGraceTimeExp = null;
-                    cache.remove(apiKey);
-                    sharedMemory.remove('failOpenGraceTimeExp');
-                    logger.eventLog({level:'debug', req: req, res: res, err:null, component:LOG_TAG_COMP }, "clearing fail open GraceInterval");
+                    // api response is non 5XX, so dont failopen, remove expired token from cache
+                    apiKeyCache.remove(apiKey);
                 }
             }
             if (err) {
@@ -274,13 +268,13 @@ module.exports.init = function(config, logger, stats) {
         //
         if (tokenCache === true) {
             debug('token caching enabled')
-            map.read(oauthtoken, function(err, tokenvalue) {
-                if (!err && tokenvalue !== undefined && tokenvalue !== null && tokenvalue === oauthtoken) {
+            validTokenCache.read(oauthtoken, function(err, tokenvalue) {
+                if (!err && tokenvalue !== undefined && tokenvalue !== null && tokenvalue === 'Y') {
                     debug('found token in cache');
                     isValid = true;
                     if (ejectToken(decodedToken.payloadObj.exp)) {
                         debug('ejecting token from cache');
-                        map.remove(oauthtoken);
+                        validTokenCache.remove(oauthtoken);
                     }
                 } else {
                     debug('token not found in cache');
@@ -307,9 +301,10 @@ module.exports.init = function(config, logger, stats) {
                     }
                 } else {
                     if (tokenvalue === null || tokenvalue === undefined) {
-                        map.size(function(err, sizevalue) {
+                        validTokenCache.size(function(err, sizevalue) {
                             if (!err && sizevalue !== null && sizevalue < tokenCacheSize) {
-                                map.store(oauthtoken, oauthtoken, decodedToken.payloadObj.exp);
+                                let tokenCacheTtl = ( ( decodedToken.payloadObj.exp - new Date().getTime() / 1000) + gracePeriod ) * 1000;
+                                validTokenCache.store(oauthtoken, 'Y' , tokenCacheTtl);
                             } else {
                                 debug('too many tokens in cache; ignore storing token');
                             }
@@ -358,7 +353,11 @@ module.exports.init = function(config, logger, stats) {
                     // default to now (in seconds) + 30m if not set
                     decodedToken.exp = decodedToken.exp || +(((Date.now() / 1000) + 1800).toFixed(0));
                     //apiKeyCache[apiKey] = decodedToken;
-                    cache.store(apiKey, decodedToken,decodedToken.exp);
+                    let cacheTtl = ( ( decodedToken.exp - new Date().getTime() / 1000  ) + gracePeriod ) * 1000;
+                    if ( isFailOpen === true  && failopenGraceInterval ) {
+                        cacheTtl += failopenGraceInterval * 1000; // will be useful if verifyApiKey call fails for 5XX.
+                    }
+                    apiKeyCache.store(apiKey, decodedToken, cacheTtl);
                     debug('api key cache store', apiKey);
                 } else {
                     debug('api key cache skip', apiKey);

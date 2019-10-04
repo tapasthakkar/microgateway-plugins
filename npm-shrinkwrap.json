@@ -2918,15 +2918,15 @@
       }
     },
     "volos-quota-apigee": {
-      "version": "0.13.4",
-      "resolved": "https://registry.npmjs.org/volos-quota-apigee/-/volos-quota-apigee-0.13.4.tgz",
-      "integrity": "sha512-ivfVWSBfhWwBzXcQHtYH6FNoZ8Hijjh3HSw8nG1ug94dUHUh/98wgyilLtL+TMk3c5tSvUgT+Z9M/uZnR+edUA==",
+      "version": "0.13.5",
+      "resolved": "https://registry.npmjs.org/volos-quota-apigee/-/volos-quota-apigee-0.13.5.tgz",
+      "integrity": "sha512-hZI6ODnnca93Ll04QraagguAdaQJ0vz2gGpAV6n8LOIHpqbQdbTDBX7qBvC43b8oQaPL+pdhu5FNDU/x8AWEMA==",
       "requires": {
         "apigee-access": ">=1.2.x",
         "debug": "^2.2.0",
         "request": "^2.6.0",
-        "semver": "3.x.x",
-        "volos-quota-common": "^0.11.8"
+        "semver": "6.x.x",
+        "volos-quota-common": "^0.11.9"
       },
       "dependencies": {
         "debug": {
@@ -2943,16 +2943,16 @@
           "integrity": "sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g="
         },
         "semver": {
-          "version": "3.0.1",
-          "resolved": "https://registry.npmjs.org/semver/-/semver-3.0.1.tgz",
-          "integrity": "sha1-cgrAElFaJS+R+w3S6ZpWpw1s8Hg="
+          "version": "6.3.0",
+          "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.0.tgz",
+          "integrity": "sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw=="
         }
       }
     },
     "volos-quota-common": {
-      "version": "0.11.8",
-      "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.8.tgz",
-      "integrity": "sha512-Np3I7F1SiKzaPcE9c38c1PWQOJOx4FEur1dPldZp28rGtklx/yUg8GqEOdtie2dTJqwPvf8QlXQUb9G/4JhPiQ==",
+      "version": "0.11.9",
+      "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.9.tgz",
+      "integrity": "sha512-hkbUbKLCvltHFIoW37YUz7vkp0GxsjeDBWq7xxmoHpwgtooQ1xdy4ftbVEhGrD+LiGkLf+DQjgrPRu1vZmUV7g==",
       "requires": {
         "debug": "^2.2.0",
         "underscore": "1.6.x"
