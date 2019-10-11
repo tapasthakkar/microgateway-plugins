@@ -31,6 +31,7 @@
     "volos-quota-common": "^0.11.9",
     "volos-quota-memory": "^0.11.0",
     "volos-spikearrest-memory": "^0.10.0",
+    "volos-quota-redis": "^0.11.2",
     "xml2js": "^0.4.17"
   },
   "devDependencies": {
