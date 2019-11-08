@@ -1,6 +1,6 @@
 {
   "name": "microgateway-plugins",
-  "version": "3.0.10",
+  "version": "3.0.11",
   "description": "Plugins for Apige Edge Microgateway",
   "license": "Apache-2.0",
   "main": "index.js",
