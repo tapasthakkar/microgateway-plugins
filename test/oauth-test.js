@@ -15,15 +15,17 @@ const proxy = { name: apiProd, base_path: '/v1/weather' }
 const token = { api_product_list: [apiName] }
 
 function* testConfig() {
-    let i =0; while ( i<4 ) {  i++; yield {  
+    let i =0; while ( i<5 ) {  i++; yield {  
       "product_to_proxy": [apiProd],
       "product_to_api_resource": {} 
 }}}
-var [slash, slashstar, slashstarstar, slashstarstar2 ] = [...testConfig()];
+var [slash, slashstar, slashstarstar, slashstarstar2, customPatternTest ] = [...testConfig()];
       slash.product_to_api_resource[apiName] = ["/"];
       slashstar.product_to_api_resource[apiName] = ["/*"];
       slashstarstar.product_to_api_resource[apiName] = ["/**"];
       slashstarstar2.product_to_api_resource[apiName] = ["/*/2/**"];
+      customPatternTest.product_to_api_resource[apiName] = ["/a/b/c"];
+      
 
 var oauthConfiigDefaults = {
   "authorization-header" : "authorization",
@@ -283,6 +285,22 @@ describe('oauth plugin', function() {
     contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1/a/2/3/`, proxy, token);
     assert(!contains)
     done()
+  })
+
+
+   // check for /a/b/c resource path.
+
+   it('checkIfAuthorized for /a/b/c', function (done) {
+    var contains;
+   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a/b/c`, proxy, token);  
+   assert(contains)
+   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a`, proxy, token);  
+   assert(!contains)
+   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a/b`, proxy, token);  
+   assert(!contains)
+   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a/b/c/d`, proxy, token);  
+   assert(!contains)
+   done()
   })
 
   // should be identical for these tests

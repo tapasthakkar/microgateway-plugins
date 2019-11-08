@@ -20,10 +20,7 @@ var _ = require('lodash');
 
 const authHeaderRegex = /Bearer (.+)/;
 const PRIVATE_JWT_VALUES = ['application_name', 'client_id', 'api_product_list', 'iat', 'exp'];
-const SUPPORTED_TOKEN_ASTERISK_PATTERN = "/*/2/**";
-const SUPPORTED_DOUBLE_ASTERISK_PATTERN = "**";
-const SUPPORTED_SINGLE_ASTERISK_PATTERN = "*";
-// const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";
+const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";
 
 const LOG_TAG_COMP = 'oauth';
 
@@ -416,12 +413,15 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
         var matchesProxyRules = false;
         if (apiproxies && apiproxies.length) {
             apiproxies.forEach(function(tempApiProxy) {
-
                 if (matchesProxyRules) {
                     //found one
                     debug('found matching proxy rule');
                     return;
                 }
+                if ( tempApiProxy === SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN ) {
+                    matchesProxyRules = true
+                } else {
+
                 urlPath = parsedUrl.pathname;
                 const apiproxy = tempApiProxy.includes(proxy.base_path) ?
                     tempApiProxy :
@@ -429,10 +429,6 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
                 if (apiproxy.endsWith("/") && !urlPath.endsWith("/")) {
                     urlPath = urlPath + "/";
                 }
-
-                if (apiproxy.includes(SUPPORTED_DOUBLE_ASTERISK_PATTERN) || 
-                   apiproxy.includes(SUPPORTED_SINGLE_ASTERISK_PATTERN) ||
-                   apiproxy.includes(SUPPORTED_TOKEN_ASTERISK_PATTERN) ) {
                     const proxyRegEx = new RegExp(`^${proxy.base_path
                         .replace(/\//g,'\\/')}${tempApiProxy
                         .replace(/(\w+)\/\*\*/g,'$1/.*')
@@ -440,11 +436,6 @@ const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAut
                         .replace( /\"/, '')
                         .replace(/\//g,'\\/')
                         .replace(/\/\*(.*?)(?=\/|$)/g,'\/\\w+\\/*') }$`, 'ig');                       
-                        matchesProxyRules = urlPath.match(proxyRegEx)
-                } else {
-                        // implies case: SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN
-                        const proxyRegEx = new RegExp(`^${proxy.base_path
-                            .replace(/\//g,'\\/')}\/\\w+|\\W+$`, 'ig');
                         matchesProxyRules = urlPath.match(proxyRegEx);
                 }
             })
