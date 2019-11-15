@@ -19,7 +19,27 @@ module.exports.init = function(config, logger /*, stats */) {
         logger.debug('quota : '+formatedData);
         debugTerminal(formatedData);
     }
-
+    const callEventLog = (level, ...data) => {
+        const formatedData = util.format(...data);
+        logger.eventLog({ level: level,component:'quota'}, formatedData);
+    }
+    const quotaLogger = {
+        debug: function (...data) {
+            callEventLog('debug',...data);
+        },
+        trace: function (...data) {
+            callEventLog('trace',...data);
+        },
+        info: function (...data) {
+            callEventLog('info',...data);
+        },
+        warn: function (...data) {
+            callEventLog('warn',...data);
+        },
+        error: function (...data) {
+            callEventLog('error',...data);
+        },
+    }
     debug('quota plugin init called with config: %j', config)
     
     const { product_to_proxy, proxies } = config;
@@ -80,6 +100,7 @@ module.exports.init = function(config, logger /*, stats */) {
 
         config[productName].request = config.request;
         config[productName]['debug'] = debug;
+        config[productName]['logger'] = quotaLogger;
         var quota = Quota.create(config[productName]);
         quotas[productName] = quota.connectMiddleware().apply(options);
         //
