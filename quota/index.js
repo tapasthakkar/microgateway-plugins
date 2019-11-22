@@ -93,6 +93,11 @@ module.exports.init = function(config, logger /*, stats */) {
         if (config[productName].useRedis === true ) {
             debug('using redis quota');
             Quota = QuotaRedis;
+            let options = { }
+            if ( config[productName]['redisPassword'] ) {
+                options['auth_pass'] = config[productName]['redisPassword'];
+            }
+            config[productName]['options'] = options;
         }
         
         prodObj.basePaths = basePaths;
