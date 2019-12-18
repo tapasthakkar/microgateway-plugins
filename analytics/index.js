@@ -49,6 +49,13 @@ module.exports.init = function(config, logger /*, stats */) {
         record.target_received_start_timestamp = req.headers['target_received_start_timestamp'];
         record.target_received_end_timestamp = req.headers['target_received_end_timestamp'];
 
+        record['target_basepath']   = req.targetPath;
+        record['target_host']       = req.targetHostname;
+
+        record['target_url']    = ( req.targetSecure ? 'https' : 'http' ) + 
+                                '://' + req.targetHostname + 
+                                ( req.targetPort ? ':' + req.targetPort : "") + req.targetPath;
+        
         try {
             cb(null, record);
         } catch (e) {
