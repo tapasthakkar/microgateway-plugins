@@ -13,7 +13,7 @@ module.exports = {
         writeLogRecord: function(record,cb) {},
         consoleLog: function (level, ...data) {}
     },
-    stat: {
+    stats: {
         incrementRequestCount: function() {},
         incrementResponseCount: function() {},
         incrementRequestErrorCount: function() {},

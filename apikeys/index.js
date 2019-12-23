@@ -6,15 +6,13 @@ var rs = require("jsrsasign");
 var fs = require("fs");
 var path = require("path");
 const memoredpath = '../third_party/memored/index';
+const checkIfAuthorized = require('../lib/validateResourcePath');
 var cache = require(memoredpath);
 var JWS = rs.jws.JWS;
 var requestLib = require("request");
 var _ = require("lodash");
 
 const PRIVATE_JWT_VALUES = ["application_name", "client_id", "api_product_list", "iat", "exp"];
-const SUPPORTED_DOUBLE_ASTERIK_PATTERN = "**";
-const SUPPORTED_SINGLE_ASTERIK_PATTERN = "*";
-// const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";    // ?? this has yet to be used in any module.
 
 const acceptAlg = ["RS256"];
 
@@ -29,10 +27,15 @@ const CONSOLE_LOG_TAG_COMP = 'microgateway-plugins apikeys';
 
 module.exports.init = function(config, logger, stats) {
 
+    if (config === undefined || !config) return (undefined);
+
     var request = config.request ? requestLib.defaults(config.request) : requestLib;
     var keys = config.jwk_keys ? JSON.parse(config.jwk_keys) : null;
 
     var middleware = function(req, res, next) {
+
+        if (!req || !res) return (-1); // need to check bad args 
+        if (!req.headers) return (-1); // or throw -- means callers are bad
 
         var apiKeyHeaderName = config.hasOwnProperty("api-key-header") ? config["api-key-header"] : "x-api-key";
 		//set to true retain the api key
@@ -216,7 +219,7 @@ module.exports.init = function(config, logger, stats) {
     };
 
     function authorize(req, res, next, logger, stats, decodedToken, apiKey) {
-        if (checkIfAuthorized(config, req.reqUrl.path, res.proxy, decodedToken)) {
+        if (checkIfAuthorized(config, req, res, decodedToken, productOnly, logger, LOG_TAG_COMP)) {
             req.token = decodedToken;
 
             var authClaims = _.omit(decodedToken, PRIVATE_JWT_VALUES);
@@ -240,80 +243,6 @@ module.exports.init = function(config, logger, stats) {
         }
     }
 
-}
-
-// from the product name(s) on the token, find the corresponding proxy
-// then check if that proxy is one of the authorized proxies in bootstrap
-const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAuthorized(config, urlPath, proxy, decodedToken) {
-
-    var parsedUrl = url.parse(urlPath);
-    //
-    debug("product only: " + productOnly);
-    //
-
-    if (!decodedToken.api_product_list) {
-        debug("no api product list");
-        return false;
-    }
-
-    return decodedToken.api_product_list.some(function(product) {
-
-        const validProxyNames = config.product_to_proxy[product];
-
-        if (!productOnly) {
-            if (!validProxyNames) {
-                debug("no proxies found for product");
-                return false;
-            }
-        }
-
-
-        const apiproxies = config.product_to_api_resource[product];
-
-        var matchesProxyRules = false;
-        if (apiproxies && apiproxies.length) {
-            apiproxies.forEach(function(tempApiProxy) {
-                if (matchesProxyRules) {
-                    //found one
-                    debug("found matching proxy rule");
-                    return;
-                }
-
-                urlPath = parsedUrl.pathname;
-                const apiproxy = tempApiProxy.includes(proxy.base_path) ?
-                    tempApiProxy :
-                    proxy.base_path + (tempApiProxy.startsWith("/") ? "" : "/") + tempApiProxy
-                if (apiproxy.endsWith("/") && !urlPath.endsWith("/")) {
-                    urlPath = urlPath + "/";
-                }
-
-                if (apiproxy.includes(SUPPORTED_DOUBLE_ASTERIK_PATTERN)) {
-                    const regex = apiproxy.replace(/\*\*/gi, ".*")
-                    matchesProxyRules = urlPath.match(regex)
-                } else {
-                    if (apiproxy.includes(SUPPORTED_SINGLE_ASTERIK_PATTERN)) {
-                        const regex = apiproxy.replace(/\*/gi, "[^/]+");
-                        matchesProxyRules = urlPath.match(regex)
-                    } else {
-                        // if(apiproxy.includes(SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN)){
-                        // }
-                        matchesProxyRules = urlPath === apiproxy;
-
-                    }
-                }
-            })
-
-        } else {
-            matchesProxyRules = true
-        }
-
-        debug("matches proxy rules: " + matchesProxyRules);
-        //add pattern matching here
-        if (!productOnly)
-            return matchesProxyRules && validProxyNames.indexOf(proxy.name) >= 0;
-        else
-            return matchesProxyRules;
-    });
 }
 
 function getPEM(decodedToken, keys) {

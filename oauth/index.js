@@ -6,6 +6,7 @@ var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
 const memoredpath = '../third_party/memored/index';
+const checkIfAuthorized =require('../lib/validateResourcePath');
 var sharedMemoryCache = require(memoredpath);
 
 //creating aliases for apiKeyCache and validTokenCache for readability
@@ -20,7 +21,6 @@ var _ = require('lodash');
 
 const authHeaderRegex = /Bearer (.+)/;
 const PRIVATE_JWT_VALUES = ['application_name', 'client_id', 'api_product_list', 'iat', 'exp'];
-const SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN = "/";
 
 const LOG_TAG_COMP = 'oauth';
 
@@ -339,7 +339,7 @@ module.exports.init = function(config, logger, stats) {
     };
 
     function authorize(req, res, next, logger, stats, decodedToken, apiKey) {
-        if (checkIfAuthorized(config, req.reqUrl.path, res.proxy, decodedToken)) {
+        if (checkIfAuthorized(config, req, res, decodedToken, productOnly, logger, LOG_TAG_COMP)) {
             req.token = decodedToken;
 
             var authClaims = _.omit(decodedToken, PRIVATE_JWT_VALUES);
@@ -387,71 +387,6 @@ module.exports.init = function(config, logger, stats) {
     };
 
 }  // end of init
-// from the product name(s) on the token, find the corresponding proxy
-// then check if that proxy is one of the authorized proxies in bootstrap
-const checkIfAuthorized = module.exports.checkIfAuthorized = function checkIfAuthorized(config, urlPath, proxy, decodedToken) {
-
-    var parsedUrl = url.parse(urlPath);
-    debug('product only: ' + productOnly);
-    if (!decodedToken.api_product_list) {
-        debug('no api product list');
-        return false;
-    }
-
-    return decodedToken.api_product_list.some(function(product) {
-
-        const validProxyNames = config.product_to_proxy[product];
-
-        if (!productOnly) {
-            if (!validProxyNames) {
-                debug('no proxies found for product');
-                return false;
-            }
-        }
-
-        const apiproxies = config.product_to_api_resource[product];
-        var matchesProxyRules = false;
-        if (apiproxies && apiproxies.length) {
-            apiproxies.forEach(function(tempApiProxy) {
-                if (matchesProxyRules) {
-                    //found one
-                    debug('found matching proxy rule');
-                    return;
-                }
-                if ( tempApiProxy === SUPPORTED_SINGLE_FORWARD_SLASH_PATTERN ) {
-                    matchesProxyRules = true
-                } else {
-
-                urlPath = parsedUrl.pathname;
-                const apiproxy = tempApiProxy.includes(proxy.base_path) ?
-                    tempApiProxy :
-                    proxy.base_path + (tempApiProxy.startsWith("/") ? "" : "/") + tempApiProxy
-                if (apiproxy.endsWith("/") && !urlPath.endsWith("/")) {
-                    urlPath = urlPath + "/";
-                }
-                    const proxyRegEx = new RegExp(`^${proxy.base_path
-                        .replace(/\//g,'\\/')}${tempApiProxy
-                        .replace(/(\w+)\/\*\*/g,'$1/.*')
-                        .replace(/\/\*\*/g,'/\\w+.*')
-                        .replace( /\"/, '')
-                        .replace(/\//g,'\\/')
-                        .replace(/\/\*(.*?)(?=\/|$)/g,'\/\\w+\\/*') }$`, 'ig');                       
-                        matchesProxyRules = urlPath.match(proxyRegEx);
-                }
-            })
-
-        } else {
-            matchesProxyRules = true
-        }
-
-        debug("matches proxy rules: " + matchesProxyRules);
-        //add pattern matching here
-        if (!productOnly)
-            return matchesProxyRules && validProxyNames.indexOf(proxy.name) >= 0;
-        else
-            return matchesProxyRules;
-    });
-}
 
 function getPEM(decodedToken, keys) {
     var i = 0;
@@ -524,26 +459,25 @@ function sendError(req, res, next, logger, stats, code, message, upstreamResp) {
             traceHelper.setChildErrorSpan('oauth', req.headers);        
         } catch (err) {}
     }
-    //
 
     if ( !res.finished ) {
         try {
             res.setHeader('content-type', 'application/json');
         } catch (e) {
-            logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "ouath response object lacks setHeader");
+            logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "oauth response object lacks setHeader");
         }
     }
 
     try {
         res.end(JSON.stringify(response));
     } catch (e) {
-        logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "ouath response object is not supplied by runtime");
+        logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "oauth response object is not supplied by runtime");
     }
     
     try {
         stats.incrementStatusCount(res.statusCode);
     } catch (e) {
-        logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "ouath stats object is not supplied by runtime");
+        logger.eventLog({level:'warn', req: req, res: res, err:null, component:LOG_TAG_COMP }, "oauth stats object is not supplied by runtime");
     }
     
     next(code, message);
