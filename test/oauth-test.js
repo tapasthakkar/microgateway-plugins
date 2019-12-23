@@ -1,6 +1,5 @@
 const oauth = require('../oauth/index');
 const oauthv2 = require('../oauthv2/index');
-//
 const assert = require('assert');
 const denv = require('dotenv');
 denv.config();
@@ -8,24 +7,6 @@ denv.config();
 const coreObject = require('./microgateway-core');
 const logger = coreObject.logger;
 const stats = coreObject.stats;
-
-const apiProd = 'edgemicro_weather';
-const apiName = 'weather';
-const proxy = { name: apiProd, base_path: '/v1/weather' }
-const token = { api_product_list: [apiName] }
-
-function* testConfig() {
-    let i =0; while ( i<5 ) {  i++; yield {  
-      "product_to_proxy": [apiProd],
-      "product_to_api_resource": {} 
-}}}
-var [slash, slashstar, slashstarstar, slashstarstar2, customPatternTest ] = [...testConfig()];
-      slash.product_to_api_resource[apiName] = ["/"];
-      slashstar.product_to_api_resource[apiName] = ["/*"];
-      slashstarstar.product_to_api_resource[apiName] = ["/**"];
-      slashstarstar2.product_to_api_resource[apiName] = ["/*/2/**"];
-      customPatternTest.product_to_api_resource[apiName] = ["/a/b/c"];
-      
 
 var oauthConfiigDefaults = {
   "authorization-header" : "authorization",
@@ -43,33 +24,8 @@ var oauthConfiigDefaults = {
   "request" : undefined
 }
 
-var default_onrequest_cb = (err) => {
-    assert.ok(!(err instanceof Error));
-    done();
-};
-
-var generic_req = {
-  token: {
-    application_name: '0e7762f4-ea67-4cc1-ae4a-21598c35b18f',
-    api_product_list: ['EdgeMicroTestProduct']       
-  }
-}
-
-var generic_res = {
-  headers: {},
-  setHeader: (key, val) => {
-    res.headers[key] = val;
-  }
-}
-
-
-// var generic_req_params = [generic_req, generic_res, default_onrequest_cb];
-
-
 describe('oauth plugin', function() {
   var plugin = null;
-
-  //this.timout(0)
 
   before(() => {
     //
@@ -86,17 +42,6 @@ describe('oauth plugin', function() {
 
   after((done) => {
     if ( plugin ) plugin.shutdown();
-    done();
-  })
-
-  it('will not initialize without a well formed config',(done) => {
-
-    var myplugin = oauth.init(undefined, logger, stats);
-    assert(myplugin === undefined)
-
-    myplugin = oauth.init(null, logger, stats);
-    assert(myplugin === undefined)
-
     done();
   })
  
@@ -160,149 +105,6 @@ describe('oauth plugin', function() {
 
   })
 
-  it('req and res are empty and default config ', (done) => {
-    // 
-    //
-    var req = {
-      headers : {}
-    };
-    var res = {};
-    //
-    process.env.EDGEMICRO_LOCAL_PROXY = "1"
-    //
-    var cb_called = false;
-    //
-    var cb = () => {
-      cb_called = true;
-      assert(true)
-      done();
-    }
-    //
-    try {
-      var pluginT = oauth.init(oauthConfiigDefaults, logger, stats);
-      pluginT.onrequest(req,res,cb)
-      if ( !cb_called ) {
-        assert(false);
-        done();
-      }
-    //
-    } catch(e) {
-      console.log(e);
-      assert(false)
-      done()
-    }
-
-  })
-
-  // check for / resource path.
-
-  it('checkIfAuthorized for /', function (done) {
-    var contains;
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}`, proxy, token);  
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/1`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/1/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/1/2`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/1/2/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/1/2/3/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slash, `${proxy.base_path}/1/a/2/3/`, proxy, token);
-    assert(contains)
-    done()
-  })
-
-   // check for /* resource path.
-
-  it('checkIfAuthorized for /*', function (done) {
-    var contains;
-     contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}`, proxy, token);  
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/1`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/1/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/1/2`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/1/2/`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/1/2/3/`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstar, `${proxy.base_path}/1/a/2/3/`, proxy, token);
-    assert(!contains)
-    done()
-  })
-  
-   // check for /** resource path.
-
-  it('checkIfAuthorized for /**', function (done) {
-    var contains;
-   contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}`, proxy, token);  
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/1`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/1/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/1/2`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/1/2/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/1/2/3/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar, `${proxy.base_path}/1/a/2/3/`, proxy, token);
-    assert(contains)
-    done()
-
-  })
-
-   // check for /*/2/** resource path.
-
-  it('checkIfAuthorized for  /*/2/**  ', function (done) {
-    var contains;
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1/`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1/2`, proxy, token);
-    assert(!contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1/2/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1/2/3/`, proxy, token);
-    assert(contains)
-    contains = oauth.checkIfAuthorized(slashstarstar2, `${proxy.base_path}/1/a/2/3/`, proxy, token);
-    assert(!contains)
-    done()
-  })
-
-
-   // check for /a/b/c resource path.
-
-   it('checkIfAuthorized for /a/b/c', function (done) {
-    var contains;
-   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a/b/c`, proxy, token);  
-   assert(contains)
-   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a`, proxy, token);  
-   assert(!contains)
-   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a/b`, proxy, token);  
-   assert(!contains)
-   contains = oauth.checkIfAuthorized(customPatternTest, `${proxy.base_path}/a/b/c/d`, proxy, token);  
-   assert(!contains)
-   done()
-  })
-
   // should be identical for these tests
   var modules = { oauth, oauthv2 }
   for (var name in modules) {
@@ -364,6 +166,45 @@ describe('oauth plugin', function() {
           var exp = new Date().getTime() / 1000 - 6
           assert.ok(plugin.testing.ejectToken(exp), "should eject")
         });
+
+        it('will not initialize without a well formed config',(done) => {
+
+          var myplugin = package.init(undefined, logger, stats);
+          assert(myplugin === undefined)
+      
+          myplugin = package.init(null, logger, stats);
+          assert(myplugin === undefined)
+          done();
+        })
+
+        it('req and res are empty and default config ', (done) => {
+          var req = {
+            headers : {}
+          };
+          var res = {
+            setHeader: function () { },
+            end: function () { }, 
+          };
+          process.env.EDGEMICRO_LOCAL_PROXY = "1"
+          var cb_called = false;
+          var cb = () => {
+            cb_called = true;
+            assert(true)
+            done();
+          }
+          try {
+            var pluginT = package.init(oauthConfiigDefaults, logger, stats);
+            pluginT.onrequest(req,res,cb)
+            if ( !cb_called ) {
+              assert(false);
+              done();
+            }
+          } catch(e) {
+            console.log(e);
+            assert(false)
+            done()
+          }
+        })
     })
   }
 });
