@@ -183,6 +183,10 @@ module.exports.init = function(config, logger /*, stats */) {
                 if ( q.flushTimer ) {
                     clearInterval(q.flushTimer)
                 }
+                if ( q.customTimeoutRef ) {
+                    clearTimeout(q.customTimeoutRef);
+                }
+                
             }
         }
 
