@@ -41,13 +41,13 @@ module.exports.init = function(config, logger /*, stats */) {
         },
     }
     debug('quota plugin init called with config: %j', config)
-    
-    const { product_to_proxy, proxies } = config;
+
+    const { product_to_proxy, proxies, global } = config;
     const prodsObj = {};
     var quotas = {}; // productName -> connectMiddleware
     var options = {
         key: function(req) {
-            return req.token.application_name+'.'+req.productName;
+            return global.org+'.'+global.env+'.'+req.token.application_name+'.'+req.productName;
         }
     };
 
