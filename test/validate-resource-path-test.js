@@ -13,7 +13,7 @@ const proxy = { name: apiProd, base_path: '/v1/weatheer' }
 const token = { api_product_list: [apiName] }
 
 function* testConfig() {
-    let i = 0; while (i < 14) {
+    let i = 0; while (i < 15) {
         i++; yield {
             "product_to_proxy": [apiName],
             "product_to_api_resource": {}
@@ -21,7 +21,8 @@ function* testConfig() {
     }
 }
 
-var [slash, slashStar, slashStarStar, slashStarStar2, customPattern, customPatternTest, aStar, aDoubleStar, bSlashStar, bSlashStarStar, withEndSlashStar, withEndSlashStarStar2, withSpecialSymbol, withStarAndSpecialSymbol] = [...testConfig()];
+var [slash, slashStar, slashStarStar, slashStarStar2, customPattern, customPatternTest, aStar, aDoubleStar, bSlashStar,
+    bSlashStarStar, withEndSlashStar, withEndSlashStarStar2, withSpecialSymbol, withStarAndSpecialSymbol, withLiteralAndTwoSlashStars] = [...testConfig()];
 slash.product_to_api_resource[apiName] = ["/"];
 slashStar.product_to_api_resource[apiName] = ["/*"];
 slashStarStar.product_to_api_resource[apiName] = ["/**"];
@@ -36,6 +37,7 @@ withEndSlashStar.product_to_api_resource[apiName] = ["/*/"];
 withEndSlashStarStar2.product_to_api_resource[apiName] = ["/*/2/**/"];
 withSpecialSymbol.product_to_api_resource[apiName] = ["/a@@@@"];
 withStarAndSpecialSymbol.product_to_api_resource[apiName] = ["/@@@@**"];
+withLiteralAndTwoSlashStars.product_to_api_resource[apiName] = ["/a/*/users/*"];
 
 var productOnly = true;
 
@@ -347,6 +349,20 @@ describe('validateResourcePath', function () {
         contains = checkIfAuthorized(withEndSlashStarStar2, getReqObject(`${proxy.base_path}/1/2/3`), res, token, productOnly, logger);
         assert(!contains)
         contains = checkIfAuthorized(withEndSlashStarStar2, getReqObject(`${proxy.base_path}/1/a/2/3/`), res, token, productOnly, logger);
+        assert(!contains)
+        done()
+    })
+
+
+      // check for /a/*/users/* resource path.
+
+      it('checkIfAuthorized for  /a/*/users/*  ', function (done) {
+        var contains;
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b/users/c`), res, token, productOnly, logger);
+        assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b/users`), res, token, productOnly, logger);
+        assert(!contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/users/c`), res, token, productOnly, logger);
         assert(!contains)
         done()
     })
