@@ -293,7 +293,7 @@ describe('validateResourcePath', function () {
         done()
     })
 
-    // check for /a**/b/** */ resource path.
+    // check for /a**/b/** resource path.
 
     it('checkIfAuthorized for  /a**/b/**  ', function (done) {
         var contains;
@@ -360,9 +360,25 @@ describe('validateResourcePath', function () {
         var contains;
         contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b/users/c`), res, token, productOnly, logger);
         assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b c/users/d`), res, token, productOnly, logger);
+        assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b_c/users/d`), res, token, productOnly, logger);
+        assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b-c/users/d`), res, token, productOnly, logger);
+        assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b:c/users/d`), res, token, productOnly, logger);
+        assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b=c/users/d`), res, token, productOnly, logger);
+        assert(contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b,c/users/d`), res, token, productOnly, logger);
+        assert(contains)
         contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b/users`), res, token, productOnly, logger);
         assert(!contains)
         contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/users/c`), res, token, productOnly, logger);
+        assert(!contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b c/users/d/`), res, token, productOnly, logger);
+        assert(!contains)
+        contains = checkIfAuthorized(withLiteralAndTwoSlashStars, getReqObject(`${proxy.base_path}/a/b c/users/d/e`), res, token, productOnly, logger);
         assert(!contains)
         done()
     })
