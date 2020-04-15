@@ -30,7 +30,11 @@ var exampleConfig = {
   proxies: [
     {name: 'hello_world', base_path: 'up.to.here.interal' },
     {name: 'hello_have_a_nice_dayworld', base_path: 'up.to.there.interal' }
-  ]
+  ],
+  global: {
+    org: 'testorg-eval',
+    env: 'test'
+  }
 }
 
 
