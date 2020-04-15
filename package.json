@@ -18,7 +18,7 @@
     "dotenv": "^8.0.0",
     "eureka-js-client": "^4.3.0",
     "js2xmlparser": "^2.0.2",
-    "jsrsasign": "^7.2.0",
+    "jsrsasign": "^8.0.15",
     "lodash": "^4.17.15",
     "lynx": "^0.2.0",
     "minimatch": "^3.0.4",
@@ -30,8 +30,8 @@
     "volos-quota-apigee": "^0.13.6",
     "volos-quota-common": "^0.11.10",
     "volos-quota-memory": "^0.11.0",
-    "volos-spikearrest-memory": "^0.10.0",
     "volos-quota-redis": "^0.11.3",
+    "volos-spikearrest-memory": "^0.10.0",
     "xml2js": "^0.4.17"
   },
   "devDependencies": {
