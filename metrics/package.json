@@ -1,0 +1,9 @@
+{
+  "name": "edgemicro-plugin-metrics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A plugin collect stat for requests coming in to the EMG and the responses going back from the EMG",
+  "dependencies": {
+    "debug": "^2.2.0"
+  }
+}
