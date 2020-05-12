@@ -9,6 +9,8 @@ const memoredpath = '../third_party/memored/index';
 const checkIfAuthorized =require('../lib/validateResourcePath');
 var sharedMemoryCache = require(memoredpath);
 
+const AuthorizationHelper = require('../lib/AuthorizationHelper');
+
 //creating aliases for apiKeyCache and validTokenCache for readability
 //both the apiKeyCache and the validTokenCache point to the same 
 //instance of shared memory cache
@@ -40,11 +42,13 @@ sharedMemoryCache.setup({
 var tokenCacheSize = 100;
 
 let oauthConfigObj = null;
+let authorizationHelper = null;
 
 module.exports.init = function(config, logger, stats) {
 
     if ( config === undefined || !config ) return(undefined);
 
+    authorizationHelper = new AuthorizationHelper(debug);
     oauthConfigObj = config;
 
     var request = config.request ? requestLib.defaults(config.request) : requestLib;
@@ -279,7 +283,7 @@ module.exports.init = function(config, logger, stats) {
                     try {
                         if (keys) {
                             debug('using jwk');
-                            var pem = getPEM(decodedToken, keys);
+                            var pem = authorizationHelper.getPEM(decodedToken, keys);
                             isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
                         } else {
                             debug('validating jwt');
@@ -315,7 +319,7 @@ module.exports.init = function(config, logger, stats) {
             try {
                 if (keys) {
                     debug('using jwk');
-                    var pem = getPEM(decodedToken, keys);
+                    var pem = authorizationHelper.getPEM(decodedToken, keys);
                     isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
                 } else {
                     debug('validating jwt');
@@ -388,18 +392,6 @@ module.exports.init = function(config, logger, stats) {
 
 }  // end of init
 
-function getPEM(decodedToken, keys) {
-    var i = 0;
-    debug('jwk kid ' + decodedToken.headerObj.kid);
-    for (; i < keys.length; i++) {
-        if (keys.kid === decodedToken.headerObj.kid) {
-            break;
-        }
-    }
-    var publickey = rs.KEYUTIL.getKey(keys.keys[i]);
-    return rs.KEYUTIL.getPEM(publickey);
-}
-
 // this should be in a separate module. This code is being copied from instance to instance.
 function ejectToken(expTimestampInSeconds) {
     var currentTimestampInSeconds = new Date().getTime() / 1000;
@@ -407,32 +399,6 @@ function ejectToken(expTimestampInSeconds) {
     return currentTimestampInSeconds > expTimestampInSeconds + gracePeriod
 }
 
-function setResponseCode(res,code) {
-    switch ( code ) {
-        case 'invalid_request': {
-            res.statusCode = 400;
-            break;
-        }
-        case 'access_denied':{
-            res.statusCode = 403;
-            break;
-        }
-        case 'invalid_token':
-        case 'missing_authorization':
-        case 'invalid_authorization': {
-            res.statusCode = 401;
-            break;
-        }
-        case 'gateway_timeout': {
-            res.statusCode = 504;
-            break;
-        }
-        default: {
-            res.statusCode = 500;
-            break;
-        }
-    }
-}
 
 function sendError(req, res, next, logger, stats, code, message, upstreamResp) {
 
@@ -441,7 +407,7 @@ function sendError(req, res, next, logger, stats, code, message, upstreamResp) {
         res.statusMessage = upstreamResp.statusMessage;
         code = 'upstream_error';
     } else {
-        setResponseCode(res,code);
+        authorizationHelper.setResponseCode(res,code);
     }
 
     var response = {

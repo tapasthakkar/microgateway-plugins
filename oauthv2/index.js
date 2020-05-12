@@ -10,6 +10,8 @@ var JWS = rs.jws.JWS;
 //var requestLib = require('request');
 var _ = require('lodash');
 
+const AuthorizationHelper = require('../lib/AuthorizationHelper');
+
 const authHeaderRegex = /Bearer (.+)/;
 const PRIVATE_JWT_VALUES = ['application_name', 'client_id', 'api_product_list', 'iat', 'exp'];
 const LOG_TAG_COMP = 'oauthv2';
@@ -27,11 +29,12 @@ map.setup({
 });
 
 var tokenCacheSize = 100;
+let authorizationHelper = null;
 
 module.exports.init = function(config, logger, stats) {
 
     if (config === undefined || !config) return (undefined);
-    
+    authorizationHelper = new AuthorizationHelper(debug);
     //var request = config.request ? requestLib.defaults(config.request) : requestLib;
     var keys = config.jwk_keys ? JSON.parse(config.jwk_keys) : null;
 
@@ -112,7 +115,7 @@ module.exports.init = function(config, logger, stats) {
                     try {
                         if (keys) {
                             debug('using jwk');
-                            var pem = getPEM(decodedToken, keys);
+                            var pem = authorizationHelper.getPEM(decodedToken, keys);
                             isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
                         } else {
                             debug('validating jwt');
@@ -147,7 +150,7 @@ module.exports.init = function(config, logger, stats) {
             try {
                 if (keys) {
                     debug('using jwk');
-                    var pem = getPEM(decodedToken, keys);
+                    var pem = authorizationHelper.getPEM(decodedToken, keys);
                     isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
                 } else {
                     debug('validating jwt');
@@ -203,18 +206,6 @@ module.exports.init = function(config, logger, stats) {
 
 }
 
-function getPEM(decodedToken, keys) {
-    var i = 0;
-    debug('jwk kid ' + decodedToken.headerObj.kid);
-    for (; i < keys.length; i++) {
-        if (keys.kid === decodedToken.headerObj.kid) {
-            break;
-        }
-    }
-    var publickey = rs.KEYUTIL.getKey(keys.keys[i]);
-    return rs.KEYUTIL.getPEM(publickey);
-}
-
 // this should be in a separate module. This code is being copied from instance to instance.
 function ejectToken(expTimestampInSeconds) {
     var currentTimestampInSeconds = new Date().getTime() / 1000;
@@ -222,36 +213,10 @@ function ejectToken(expTimestampInSeconds) {
     return currentTimestampInSeconds > expTimestampInSeconds + gracePeriod
 }
 
-function setResponseCode(res,code) {
-    switch ( code ) {
-        case 'invalid_request': {
-            res.statusCode = 400;
-            break;
-        }
-        case 'access_denied':{
-            res.statusCode = 403;
-            break;
-        }
-        case 'invalid_token':
-        case 'missing_authorization':
-        case 'invalid_authorization': {
-            res.statusCode = 401;
-            break;
-        }
-        case 'gateway_timeout': {
-            res.statusCode = 504;
-            break;
-        }
-        default: {
-            res.statusCode = 500;
-            break;
-        }
-    }
-}
 
 function sendError(req, res, next, logger, stats, code, message) {
 
-    setResponseCode(res,code);
+    authorizationHelper.setResponseCode(res,code);
 
     var response = {
         error: code,
