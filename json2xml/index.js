@@ -81,9 +81,13 @@ module.exports.init = function (/*config, logger, stats*/) {
 				} else if (method !== "get" && contentType.indexOf("application/json") > -1) {
 					requestJSON = true;
 					responseJSON = true;
+					//set request content type.
+					req.headers['content-type'] = 'application/xml';
 				} else if (method !== "get" && contentType.indexOf("application/xml") > -1) {
 					requestXML = true;
 					responseXML = true;
+					//set request content type.
+					req.headers['content-type'] = 'application/json';
 				}
 			}
 			
@@ -132,13 +136,8 @@ module.exports.init = function (/*config, logger, stats*/) {
 				if (requestJSON) {
 					//the request needs to be transformed to xml before sending to 
 					//the target server.
-
-					//set request content type.
-					req.headers['Content-Type'] = 'application/xml';
 					next(null, js2xmlparser.parse("Root",JSON.parse(content)));
 				} else if (requestXML) {
-					//set request content type.
-					req.headers['Content-Type'] = 'application/json';
 					parseString(content.toString(), function(err, js){
 						if (err) next (err);
 						next(null, JSON.stringify(js));
