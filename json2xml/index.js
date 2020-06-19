@@ -34,16 +34,18 @@ module.exports.init = function (/*config, logger, stats*/) {
 	//initialize the variables to false
 
 	//variables to control whether request and/or response transformation should take place
-	var requestXML = false;
-	var requestJSON = false;
-	var responseJSON = false;
-	var responseXML = false;
-	//use these variables to determine the content type of response sent by target server
-	var responseIsXML = false;
-	var responseIsJSON = false;
-	//flag to control whether transfornation should take place
-	var disable = false;
-
+	const getControlFlags = () => {
+		return {
+			requestXML : false,
+			requestJSON : false,
+			responseJSON : false,
+			responseXML : false,
+			responseIsXML : false,
+			responseIsJSON : false,
+			disable : false
+		}
+	}
+	
 	//method to accumulate responses
 	function accumulateResponse(res, data) {
 		debug('plugin accumulateResponse');
@@ -54,7 +56,7 @@ module.exports.init = function (/*config, logger, stats*/) {
 	//method to accumulate requests
 	function accumulateRequest(req, data) {
 		debug('plugin accumulateRequest');
-		if (disable) return;
+		if (req.jsonXmlFlags.disable) return;
 		if (!req._chunks) req._chunks = [];
 		req._chunks.push(data);
 	}
@@ -67,37 +69,39 @@ module.exports.init = function (/*config, logger, stats*/) {
 			var acceptType = req.headers['accept'];
 			var contentType = req.headers['content-type'];
 
-			if (req.headers['x-apigee-json2xml-disable']) disable = true;
+			req.jsonXmlFlags = getControlFlags();
+			
+			if (req.headers['x-apigee-json2xml-disable']) req.jsonXmlFlags.disable = true;
 
 			debug("accept header: " + acceptType);
 			debug("content-type header: " + contentType);
 
 			//if plugin is disabled don't process headers.
-			if (!disable) {
+			if (!req.jsonXmlFlags.disable) {
 				if (method === "get" && acceptType.indexOf("application/xml") > -1) {
-					responseXML = true;
+					req.jsonXmlFlags.responseXML = true;
 				} else if (method === "get" && acceptType.indexOf("application/json") > -1) {
-					responseJSON = true;
+					req.jsonXmlFlags.responseJSON = true;
 				} else if (method !== "get" && contentType.indexOf("application/json") > -1) {
-					requestJSON = true;
-					responseJSON = true;
+					req.jsonXmlFlags.requestJSON = true;
+					req.jsonXmlFlags.responseJSON = true;
 					//set request content type.
 					req.headers['content-type'] = 'application/xml';
 				} else if (method !== "get" && contentType.indexOf("application/xml") > -1) {
-					requestXML = true;
-					responseXML = true;
+					req.jsonXmlFlags.requestXML = true;
+					req.jsonXmlFlags.responseXML = true;
 					//set request content type.
 					req.headers['content-type'] = 'application/json';
 				}
 			}
 			
-			debug("requestJSON flag is " + requestJSON);
-			debug("responseJSON flag is " + responseJSON);
+			debug("requestJSON flag is " + req.jsonXmlFlags.requestJSON);
+			debug("responseJSON flag is " + req.jsonXmlFlags.responseJSON);
 
-			debug("requestXML flag is " + requestXML);
-			debug("responseXML flag is " + responseXML);
+			debug("requestXML flag is " + req.jsonXmlFlags.requestXML);
+			debug("responseXML flag is " + req.jsonXmlFlags.responseXML);
 
-			debug("plugin disabled: " + disable);
+			debug("plugin disabled: " + req.jsonXmlFlags.disable);
 
 			next();
 		},
@@ -111,20 +115,20 @@ module.exports.init = function (/*config, logger, stats*/) {
 		//
 		ondata_request: function(req, res, data, next) {
 			debug('plugin ondata_request');
-			if (data && data.length > 0 && disable === false) accumulateRequest(req, data);
+			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateRequest(req, data);
 			next(null, null);
 		},
 		//
 		//
 		ondata_response: function(req, res, data, next) {
 			debug('plugin ondata_response');
-			if (data && data.length > 0 && disable === false) accumulateResponse(res, data);
+			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateResponse(res, data);
 			next(null, null);
 		},
 		//
 		onend_request: function(req, res, data, next) {
 			debug('plugin onend_request');
-			if (data && data.length > 0 && disable === false) accumulateRequest(res, data);
+			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateRequest(res, data);
 			var content = null;
 			if(req._chunks && req._chunks.length) {
 				content = Buffer.concat(req._chunks);
@@ -132,12 +136,12 @@ module.exports.init = function (/*config, logger, stats*/) {
 			delete req._chunks;
 
 			//if pugin is disabled, don't do anything
-			if (!disable) {
-				if (requestJSON) {
+			if (!req.jsonXmlFlags.disable) {
+				if (req.jsonXmlFlags.requestJSON) {
 					//the request needs to be transformed to xml before sending to 
 					//the target server.
 					next(null, js2xmlparser.parse("Root",JSON.parse(content)));
-				} else if (requestXML) {
+				} else if (req.jsonXmlFlags.requestXML) {
 					parseString(content.toString(), function(err, js){
 						if (err) next (err);
 						next(null, JSON.stringify(js));
@@ -152,17 +156,17 @@ module.exports.init = function (/*config, logger, stats*/) {
 		//
 		onend_response: function(req, res, data, next) {
 			debug('plugin onend_request');
-			if (data && data.length > 0 && disable === false) accumulateResponse(res, data);
+			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateResponse(res, data);
 
 			var contentType = res.getHeader('content-type');
 			if (contentType && contentType.indexOf("application/xml") > -1) {
-				responseIsXML = true;
+				req.jsonXmlFlags.responseIsXML = true;
 			} else if (contentType && contentType.indexOf("application/json") > -1) {
-				responseIsJSON = true;
+				req.jsonXmlFlags.responseIsJSON = true;
 			}
 
-			debug("responseIsJSON flag is " + responseIsJSON);
-			debug("responseIsXML flag is" + responseIsXML);
+			debug("responseIsJSON flag is " + req.jsonXmlFlags.responseIsJSON);
+			debug("responseIsXML flag is" + req.jsonXmlFlags.responseIsXML);
 
 
 			var content = null;
@@ -172,11 +176,11 @@ module.exports.init = function (/*config, logger, stats*/) {
 			delete res._chunks;
 
 			//if disabled don't do anything.
-			if (!disable) {
-				if (responseXML && responseIsJSON) {
+			if (!req.jsonXmlFlags.disable) {
+				if (req.jsonXmlFlags.responseXML && req.jsonXmlFlags.responseIsJSON) {
 					res.setHeader('Content-Type', 'application/xml');
 					next(null, js2xmlparser.parse("Root",JSON.parse(content)));
-				} else if (responseJSON && responseIsXML) {
+				} else if (req.jsonXmlFlags.responseJSON && req.jsonXmlFlags.responseIsXML) {
 					res.setHeader('Content-Type', 'application/json');
 					parseString(content.toString(), function(err, js){
 						if (err) next (err);
