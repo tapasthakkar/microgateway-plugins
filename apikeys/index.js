@@ -186,7 +186,7 @@ module.exports.init = function(config, logger, stats) {
             try {
                 isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
             } catch (error) {
-                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ');
             }
         } else {
             debug("validating jwt");
@@ -194,7 +194,7 @@ module.exports.init = function(config, logger, stats) {
             try {
                 isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
             } catch (error) {
-                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ' + oauthtoken);
+                logger.consoleLog('warn', {component: CONSOLE_LOG_TAG_COMP}, 'error parsing jwt: ');
             }
         }
         if (!isValid) {

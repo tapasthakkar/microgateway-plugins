@@ -290,7 +290,7 @@ module.exports.init = function(config, logger, stats) {
                             isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                         }                            
                     } catch (error) {
-                        logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'error parsing jwt: ' + oauthtoken);
+                        logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'error parsing jwt: ');
                     }
                 }
                 if (!isValid) {
@@ -326,7 +326,7 @@ module.exports.init = function(config, logger, stats) {
                     isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                 }
             } catch (error) {
-                logger.eventLog({level:'warn', req: req, res: res, err:error, component:LOG_TAG_COMP }, 'error parsing jwt: ' + oauthtoken);
+                logger.eventLog({level:'warn', req: req, res: res, err:error, component:LOG_TAG_COMP }, 'error parsing jwt: ');
             }
             if (!isValid) {
                 if (config.allowInvalidAuthorization) {
