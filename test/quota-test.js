@@ -21,19 +21,23 @@ var exampleConfig = {
     key: process.env.QUOTA_KEY,
     secret: process.env.QUOTA_SECRET 
   },
-  product_to_proxy: {
-    EdgeMicroTestProduct :  [
-      'hello_world',
-      'have_a_nice_day'
-    ]
-  },
-  proxies: [
-    {name: 'hello_world', base_path: 'up.to.here.interal' },
-    {name: 'hello_have_a_nice_dayworld', base_path: 'up.to.there.interal' }
-  ],
-  global: {
-    org: 'testorg-eval',
-    env: 'test'
+  emgConfigs: {
+    product_to_proxy: {
+      EdgeMicroTestProduct :  [
+        'hello_world',
+        'have_a_nice_day'
+      ]
+    },
+    proxies: [
+      {name: 'hello_world', base_path: 'up.to.here.interal' },
+      {name: 'hello_have_a_nice_dayworld', base_path: 'up.to.there.interal' }
+    ],
+    edgemicro: {
+        global: {
+        org: 'testorg-eval',
+        env: 'test'
+      }
+    }
   }
 }
 
@@ -48,6 +52,14 @@ var exampleUselessConfig = {
     uri: undefined,
     key: undefined,
     secret: undefined 
+  },
+  emgConfigs: {
+    edgemicro: {
+        global: {
+        org: 'testorg-eval',
+        env: 'test'
+      }
+    }
   }
 }
 
@@ -62,16 +74,24 @@ var exampleBogusConfig_timeUnit = {
     key: process.env.QUOTA_KEY,
     secret: process.env.QUOTA_SECRET 
   },
-  product_to_proxy: {
-    EdgeMicroTestProduct :  [
-      'hello_world',
-      'have_a_nice_day'
-    ]
-  },
-  proxies: [
-    {name: 'hello_world', base_path: 'up.to.here.interal' },
-    {name: 'hello_have_a_nice_dayworld', base_path: 'up.to.there.interal' }
-  ]
+  emgConfigs: {
+    product_to_proxy: {
+      EdgeMicroTestProduct :  [
+        'hello_world',
+        'have_a_nice_day'
+      ]
+    },
+    proxies: [
+      {name: 'hello_world', base_path: 'up.to.here.interal' },
+      {name: 'hello_have_a_nice_dayworld', base_path: 'up.to.there.interal' }
+    ],
+    edgemicro: {
+      global: {
+      org: 'testorg-eval',
+      env: 'test'
+    }
+  }
+  }
 }
 
 
@@ -85,10 +105,18 @@ var exampleBogusConfig_NoURI_NOKEY = {
     key: undefined,
     secret: process.env.QUOTA_SECRET 
   },
-  product_to_proxy: {
-    EdgeMicroTestProduct :  emtProxy
-  },
-  proxies: [emtProxy]
+  emgConfigs: {
+    product_to_proxy: {
+      EdgeMicroTestProduct :  emtProxy
+    },
+    proxies: [emtProxy],
+    edgemicro: {
+      global: {
+      org: 'testorg-eval',
+      env: 'test'
+    }
+  }
+  }
 }
 
 

@@ -42,7 +42,8 @@ module.exports.init = function(config, logger /*, stats */) {
     }
     debug('quota plugin init called with config: %j', config)
 
-    const { product_to_proxy, proxies, global } = config;
+    const { product_to_proxy, proxies } = config.emgConfigs;
+    const global = config.emgConfigs.edgemicro.global;
     const prodsObj = {};
     var quotas = {}; // productName -> connectMiddleware
     var options = {
