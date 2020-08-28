@@ -89,7 +89,8 @@ module.exports.init = function(config, logger, stats) {
         var oauthtoken = token && token.token ? token.token : token;
 		var decodedToken;
 		try {
-			decodedToken = JWS.parse(oauthtoken);
+            decodedToken = JWS.parse(oauthtoken);
+            req.token = decodedToken.payloadObj;
 		} catch (err) {
             if (config.allowInvalidAuthorization) {
                 logger.eventLog({level:'warn', req: req, res: res, err: err, component:LOG_TAG_COMP }, 'ignoring err');
@@ -174,8 +175,8 @@ module.exports.init = function(config, logger, stats) {
     };
 
     function authorize(req, res, next, logger, stats, decodedToken) {
+        req.token = decodedToken;
         if (checkIfAuthorized(config, req, res, decodedToken, productOnly, logger, LOG_TAG_COMP)) {
-            req.token = decodedToken;
             var authClaims = _.omit(decodedToken, PRIVATE_JWT_VALUES);
             req.headers['x-authorization-claims'] = new Buffer(JSON.stringify(authClaims)).toString('base64');
             next();

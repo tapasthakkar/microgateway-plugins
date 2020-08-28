@@ -263,6 +263,7 @@ module.exports.init = function(config, logger, stats) {
         //
         try {
             decodedToken = JWS.parse(oauthtoken);
+            req.token = decodedToken.payloadObj;
         } catch(e) {
             // 'invalid_token'
             return sendError(req, res, next, logger, stats, 'invalid_token','token could not be parsed');
@@ -343,9 +344,8 @@ module.exports.init = function(config, logger, stats) {
     };
 
     function authorize(req, res, next, logger, stats, decodedToken, apiKey) {
+        req.token = decodedToken;
         if (checkIfAuthorized(config, req, res, decodedToken, productOnly, logger, LOG_TAG_COMP)) {
-            req.token = decodedToken;
-
             var authClaims = _.omit(decodedToken, PRIVATE_JWT_VALUES);
             req.headers['x-authorization-claims'] = new Buffer(JSON.stringify(authClaims)).toString('base64');
 
