@@ -245,10 +245,18 @@ module.exports.init = function(config, logger, stats) {
             }
             if (err) {
                 debug('verify apikey gateway timeout');
+                logger.eventLog({ level:'error', req: req, res: response, err: err, component: LOG_TAG_COMP},'verify apikey gateway timeout');
                 return sendError(req, res, next, logger, stats, 'gateway_timeout', err.message);
             }
             if (response.statusCode !== 200) {
                 debug('verify apikey failure',response.statusCode, response.statusMessage, body);
+                let logMessage = 'verify apikey failure ' + response.statusMessage + ' ';
+                try{
+                    logMessage += JSON.stringify(body);
+                }catch (error) {
+                    debug('Error in parsing response', error);
+                }
+                logger.eventLog({ level:'error', req: req, res: response, err: err, component: LOG_TAG_COMP}, logMessage);
                 return sendError(req, res, next, logger, stats, 'access_denied', response.statusMessage,response);
             }
             verify(body, config, logger, stats, middleware, req, res, next, apiKey);
