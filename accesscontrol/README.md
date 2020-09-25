@@ -14,16 +14,15 @@ You can set the following properties in the `accesscontrol` plugin in the Edge M
 
 ```yaml
 accesscontrol:
-
   allow: 
-	  - 10.11.12.13
-	  - 127.*.*.*
+    - 10.11.12.13
+    - 127.*.*.*
   # This property enables us to specify multiple IPs/endpoints for which we want to allow the API requests to Edge Microgateway 
   # we can specify the IPs with wildcards as well.
 
   deny:
-	  - 11.11.11.11
-	  - 215.*.*.*
+    - 11.11.11.11
+    - 215.*.*.*
 
   # This property enables us to specify multiple IPs/ endpoints for which we want to restrict/deny the API requests to Edge Microgateway 
   # we can specify the IPs with wildcards as well.
@@ -47,14 +46,12 @@ You can set the following properties in the `accesscontrol` plugin in the Edge M
 
 ```yaml
 accesscontrol:
-  # How often the spike arrest execution window resets. Valid values are seconds or minutes.
-  # Default: none
-	allow:
-    - 10.10.10.10
-    - 11.*.11.*
-	deny:
-		- 12.12.12.*
-	noRuleMatchAction: allow	
+  deny:
+    - 10.10.10.10 
+  allow: 
+    - 12.*.*.* 
+    - 11.11.11.11
+  noRuleMatchAction: allow	
 ```
 
 ## Use Cases (apart from normal scenario)
@@ -69,21 +66,22 @@ Config Yaml to deny first:
  
 ```yaml
 accesscontrol:
-  deny: 
-	  - 12.*.*.* 
-	  - 11.11.11.11
-  allow:
-	  - 11.11.11.11
+  deny:
+    - 11.11.11.11 
+  allow: 
+    - 12.*.*.* 
+    - 11.11.11.11
+  noRuleMatchAction: allow
 ```
 
 Config Yaml to allow first: 
 
-```yaml 
+```yaml
 accesscontrol:
   allow:
-	  - 12.*.*.* 
-	  - 11.11.11.11 
-  deny: 
+    - 11.11.11.11 
+  allow: 
+    - 12.*.*.* 
     - 11.11.11.11
 ```	   
  
@@ -110,4 +108,4 @@ accesscontrol:
 	# In the case above the request will be allowed to go through as the value of the config noRuleMatchAction: is “allow”. 
  
 
-## The value of ‘noRuleMatchAction’ has to be of string type and it gets validated during the EMG startup, if its enabled/ defined in the config yaml.
+The value of ‘noRuleMatchAction’ has to be of string type and it gets validated during the EMG startup, if its enabled/ defined in the config yaml.
