@@ -64,7 +64,7 @@ module.exports.init = function (config , logger, stats) {
 				if ( action === 'allow' ) {
 					next();
 				}
-				if ( action === 'deny' ) {
+				else if ( action === 'deny' ) {
 					sendError(res, req,  null, next);	
 				}
 				return true;
