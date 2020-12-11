@@ -105,4 +105,75 @@ describe('accumulate request plugin', () => {
     plugin.onend_request.apply(null, [req, {}, null, onend_cb]);  
 
   });
+
+  it('Will process string data in ondata_request handler ', (done) => {
+    const desiredResult = 'aaa';
+    
+    const ondata_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result, null);
+      assert.ok(req._chunks);
+    }
+
+    const onend_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result.toString(), desiredResult); 
+      done();
+    } 
+
+    const req = {};
+
+    plugin.ondata_request.apply(null, [req, {},'a', ondata_cb]);
+    plugin.ondata_request.apply(null, [req, {},'a', ondata_cb]);
+    plugin.ondata_request.apply(null, [req, {},'a', ondata_cb]);
+    
+    plugin.onend_request.apply(null, [req, {}, null, onend_cb]);  
+  });
+
+  it('Will process numeric data in ondata_request handler ', (done) => {
+    const desiredResult = '123';
+    const req = {};
+
+    const ondata_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result, null);
+      assert.ok(req._chunks);
+    }
+
+    const onend_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result.toString(), desiredResult); 
+      done();
+    } 
+
+    plugin.ondata_request.apply(null, [req, {}, 1, ondata_cb]);
+    plugin.ondata_request.apply(null, [req, {}, 2, ondata_cb]);
+    plugin.ondata_request.apply(null, [req, {}, 3, ondata_cb]);
+    
+    plugin.onend_request.apply(null, [req, {}, null, onend_cb]);  
+  });
+
+  it('Will process boolean data in ondata_request handler ', (done) => {
+    const desiredResult = 'truefalsetrue';
+    const req = {};
+
+    const ondata_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result, null);
+      assert.ok(req._chunks);
+    }
+
+    const onend_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result.toString(), desiredResult); 
+      done();
+    } 
+
+    plugin.ondata_request.apply(null, [req, {}, true, ondata_cb]);
+    plugin.ondata_request.apply(null, [req, {}, false, ondata_cb]);
+    plugin.ondata_request.apply(null, [req, {}, true, ondata_cb]);
+    
+    plugin.onend_request.apply(null, [req, {}, null, onend_cb]);  
+  });
+
 })

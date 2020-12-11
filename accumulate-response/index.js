@@ -1,4 +1,7 @@
 'use strict';
+const debug = require('debug')('plugin:accumulate-response');
+
+const helperFunctions = require('../lib/helperFunctions');
 
 /**
  * This plugin accumulates data chunks from the target into an array
@@ -13,6 +16,8 @@
  * high load or with a large number of concurrent requests. So this plugin
  * should only be used when it is known that request/response bodies are small.
  */
+const LOG_TAG_COMP = 'accumulate-response';
+
 module.exports.init = function(/*config, logger, stats*/) {
 
   function accumulate(res, data) {
@@ -23,6 +28,7 @@ module.exports.init = function(/*config, logger, stats*/) {
   return {
 
     ondata_response: function(req, res, data, next) {
+      data = helperFunctions.toBuffer(data);
       if (data && data.length > 0) accumulate(res, data);
       next(null, null);
     },
@@ -31,7 +37,13 @@ module.exports.init = function(/*config, logger, stats*/) {
       if (data && data.length > 0) accumulate(res, data);
       var content = null;
       if(res._chunks && res._chunks.length) {
-        content = Buffer.concat(res._chunks);
+        try {
+          content = Buffer.concat(res._chunks);
+        } catch(err){
+          debug('Error in creating buffered content', err);
+          content='';
+          logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, "Error in creating buffered content");
+        }
       }
       delete res._chunks;
       next(null, content);

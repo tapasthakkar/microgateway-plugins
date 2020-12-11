@@ -12,12 +12,14 @@ describe('accumulate response plugin', () => {
     plugin = accumulateResponse.init.apply(null, [config, logger, stats]);
   });
 
-  it('exposes an ondata_response handler', () => {
+  it('exposes an ondata_response handler', (done) => {
     assert.ok(plugin.ondata_response);
+    done()
   });
 
-  it('exposes an onend_response handler', () => {
+  it('exposes an onend_response handler', (done) => {
     assert.ok(plugin.onend_response);
+    done()
   });
 
   it('calls back with two null function arguments in the ondata_response handler', (done) => {
@@ -102,6 +104,77 @@ describe('accumulate response plugin', () => {
 
     plugin.onend_response.apply(null, [{}, res, null, cb]);
 
+  });
+
+
+  it('Will process string data in ondata_response handler ', (done) => {
+    const desiredResult = 'aaa';
+    
+    const ondata_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result, null);
+      assert.ok(res._chunks);
+    }
+
+    const onend_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result.toString(), desiredResult); 
+      done();
+    } 
+
+    const res = {};
+
+    plugin.ondata_response.apply(null, [{}, res,'a', ondata_cb]);
+    plugin.ondata_response.apply(null, [{}, res,'a', ondata_cb]);
+    plugin.ondata_response.apply(null, [{}, res,'a', ondata_cb]);
+    
+    plugin.onend_response.apply(null, [{}, res, null, onend_cb]);  
+  });
+
+  it('Will process numeric data in ondata_response handler ', (done) => {
+    const desiredResult = '123';
+    const res = {};
+
+    const ondata_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result, null);
+      assert.ok(res._chunks);
+    }
+
+    const onend_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result.toString(), desiredResult); 
+      done();
+    } 
+
+    plugin.ondata_response.apply(null, [{}, res, 1, ondata_cb]);
+    plugin.ondata_response.apply(null, [{}, res, 2, ondata_cb]);
+    plugin.ondata_response.apply(null, [{}, res, 3, ondata_cb]);
+    
+    plugin.onend_response.apply(null, [{}, res, null, onend_cb]);  
+  });
+
+  it('Will process boolean data in ondata_response handler ', (done) => {
+    const desiredResult = 'truefalsetrue';
+    const res = {};
+
+    const ondata_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result, null);
+      assert.ok(res._chunks);
+    }
+
+    const onend_cb = (err, result) => {
+      assert.equal(err, null);
+      assert.equal(result.toString(), desiredResult); 
+      done();
+    } 
+
+    plugin.ondata_response.apply(null, [{}, res, true, ondata_cb]);
+    plugin.ondata_response.apply(null, [{}, res, false, ondata_cb]);
+    plugin.ondata_response.apply(null, [{}, res, true, ondata_cb]);
+    
+    plugin.onend_response.apply(null, [{}, res, null, onend_cb]);  
   });
 
 })

@@ -29,7 +29,10 @@ var js2xmlparser = require("js2xmlparser");
 var parseString = require("xml2js").parseString;
 //var util = require("util");
 
-module.exports.init = function (/*config, logger, stats*/) {
+const helperFunctions = require('../lib/helperFunctions');
+const LOG_TAG_COMP = 'json2xml';
+
+module.exports.init = function (config, logger, stats) {
 
 	//initialize the variables to false
 
@@ -115,6 +118,7 @@ module.exports.init = function (/*config, logger, stats*/) {
 		//
 		ondata_request: function(req, res, data, next) {
 			debug('plugin ondata_request');
+			data = helperFunctions.toBuffer(data);
 			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateRequest(req, data);
 			next(null, null);
 		},
@@ -122,6 +126,7 @@ module.exports.init = function (/*config, logger, stats*/) {
 		//
 		ondata_response: function(req, res, data, next) {
 			debug('plugin ondata_response');
+			data = helperFunctions.toBuffer(data);
 			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateResponse(res, data);
 			next(null, null);
 		},
@@ -131,7 +136,13 @@ module.exports.init = function (/*config, logger, stats*/) {
 			if (data && data.length > 0 && req.jsonXmlFlags.disable === false) accumulateRequest(res, data);
 			var content = null;
 			if(req._chunks && req._chunks.length) {
-				content = Buffer.concat(req._chunks);
+				try {
+					content = Buffer.concat(req._chunks);
+				  } catch(err) {
+					debug('Error in creating buffered content', err);
+					content='';
+					logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, "Error in creating buffered content");
+				  }
 			}
 			delete req._chunks;
 
@@ -171,7 +182,13 @@ module.exports.init = function (/*config, logger, stats*/) {
 
 			var content = null;
 			if(res._chunks && res._chunks.length) {
-				content = Buffer.concat(res._chunks);
+				try {
+					content = Buffer.concat(res._chunks);
+				} catch (err) {
+					debug('Error in creating buffered content', err);
+					content = '';
+					logger.eventLog({ level: 'warn', req: req, res: res, err: err, component: LOG_TAG_COMP }, "Error in creating buffered content");
+				}
 			}
 			delete res._chunks;
 
