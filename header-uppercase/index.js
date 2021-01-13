@@ -33,18 +33,26 @@ module.exports.init = function(/*config, logger, stats*/) {
     // should return (potentially) transformed data for next plugin in chain
     // the returned value from the last plugin in the chain is written to the target
     ondata_request: function(req, res, data, next) {
-      debug('plugin ondata_request ' + data.length);
-      var transformed = data.toString().toUpperCase();
-      next(null, transformed);
+      debug('plugin ondata_request ');
+      if ( data ) {
+        var transformed = data.toString().toUpperCase();
+        next(null, transformed);
+      } else {
+        next(null, data);
+      }
     },
 
     // chunk of response body data received from target
     // should return (potentially) transformed data for next plugin in chain
     // the returned value from the last plugin in the chain is written to the client
     ondata_response: function(req, res, data, next) {
-      debug('plugin ondata_response ' + data.length);
-      var transformed = data.toString().toUpperCase();
-      next(null, transformed);
+      debug('plugin ondata_response ');
+      if ( data ) {
+        var transformed = data.toString().toUpperCase();
+        next(null, transformed);
+      } else {
+        next(null, data);
+      }
     },
 
     // indicates end of client request
