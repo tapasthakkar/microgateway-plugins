@@ -55,6 +55,8 @@ module.exports.init = function(config, logger /*, stats */) {
         record['target_url']    = ( req.targetSecure ? 'https' : 'http' ) + 
                                 '://' + req.targetHostname + 
                                 ( req.targetPort ? ':' + req.targetPort : "") + req.targetPath;
+
+        record['target_response_code'] = req.headers['target_response_code'];
         
         try {
             cb(null, record);
