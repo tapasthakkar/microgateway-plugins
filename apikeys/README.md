@@ -45,15 +45,6 @@ apikeys:
 
  cacheKey: true
 
- # Number of seconds before the token is removed from the cache.
- # If you set this to 5 (seconds), then Edge Microgateway will check if the
- # difference between the expiry time and the current time [abs(expiry time - current time)]
- # is less than or equal (<=) to the grace period.  If true, then Edge Microgateway
- # will remove the token from the cache.  
- # Default: 0 seconds
-
- gracePeriod: 5
-
  # Set to true to enable Edge Microgateway to check against the resource paths only.  
  # In this case it ignores the proxy name check.  
  # Set to false to enable Edge Microgateway to check if the proxy name is included in the product.

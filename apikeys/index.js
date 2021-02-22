@@ -46,9 +46,6 @@ module.exports.init = function(config, logger, stats) {
 		var keepApiKey = config.hasOwnProperty('keep-api-key') ? config['keep-api-key'] : false;
 		//cache api keys
         cacheKey = config.hasOwnProperty("cacheKey") ? config.cacheKey : false;
-        //set grace period
-        var gracePeriod = config.hasOwnProperty("gracePeriod") ? config.gracePeriod : 0;
-        acceptField.gracePeriod = gracePeriod;
         //store api keys here
         var apiKey;
         //this flag will enable check against resource paths only
