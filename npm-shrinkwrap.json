@@ -412,7 +412,6 @@
       "requires": {
         "anymatch": "~3.1.1",
         "braces": "~3.0.2",
-        "fsevents": "~2.1.1",
         "glob-parent": "~5.1.0",
         "is-binary-path": "~2.1.0",
         "is-glob": "~4.0.1",
@@ -1088,13 +1087,6 @@
       "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz",
       "integrity": "sha1-FQStJSMVjKpA20onh8sBQRmU6k8=",
       "dev": true
-    },
-    "fsevents": {
-      "version": "2.1.3",
-      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.1.3.tgz",
-      "integrity": "sha512-Auw9a4AxqWpa9GUfj370BMPzzyncfBABW8Mab7BGWBYDj4Isgq+cDKtx0i6u9jcX9pQDnswsaaOTgTmA5pEjuQ==",
-      "dev": true,
-      "optional": true
     },
     "function-bind": {
       "version": "1.1.1",
@@ -3656,15 +3648,15 @@
       }
     },
     "volos-quota-apigee": {
-      "version": "0.13.6",
-      "resolved": "https://registry.npmjs.org/volos-quota-apigee/-/volos-quota-apigee-0.13.6.tgz",
-      "integrity": "sha512-sM9izb+AzaPtC4gT9Cb0y4HAniodjEgeYg0bfsBGjxQLtJHeLrCWjot4xQKlV/+z3fPJ73D/kSDuZNOWePpvpQ==",
+      "version": "0.13.7",
+      "resolved": "https://registry.npmjs.org/volos-quota-apigee/-/volos-quota-apigee-0.13.7.tgz",
+      "integrity": "sha512-L6z05TEI9Z+NaSXNa+NlkY0cnF/0zeXS1Eat9yM8pr/HiIT91mCWXATDECXZdmstcRRFDMgd4pzOSxxwpUVOvw==",
       "requires": {
         "apigee-access": ">=1.2.x",
         "debug": "^2.2.0",
         "request": "^2.6.0",
         "semver": "6.x.x",
-        "volos-quota-common": "^0.11.9"
+        "volos-quota-common": "^0.11.11"
       },
       "dependencies": {
         "debug": {
@@ -3683,12 +3675,12 @@
       }
     },
     "volos-quota-common": {
-      "version": "0.11.10",
-      "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.10.tgz",
-      "integrity": "sha512-mj7biAXstfyYDXIWNzVUunyETIoREWSBTxu1pZv3II+hmfy9MYJ6Sp9JREKXLAkpZWanZaPrnf5qELF9alDY1g==",
+      "version": "0.11.11",
+      "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.11.tgz",
+      "integrity": "sha512-nblGXL2A+ipBTJ8N3PTsBKos2GrEkxA/6fVuyx13MNNyK6+SAO43/1O+FcRUfH4DhVeJVLzeefQakCUFUuJIUw==",
       "requires": {
         "debug": "^2.2.0",
-        "underscore": "1.6.x"
+        "underscore": "1.12.1"
       },
       "dependencies": {
         "debug": {
@@ -3705,9 +3697,9 @@
           "integrity": "sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g="
         },
         "underscore": {
-          "version": "1.6.0",
-          "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.6.0.tgz",
-          "integrity": "sha1-izixDKze9jM3uLJOT/htRa6lKag="
+          "version": "1.12.1",
+          "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.12.1.tgz",
+          "integrity": "sha512-hEQt0+ZLDVUMhebKxL4x1BTtDY7bavVofhZ9KZ4aI26X9SRaE+Y3m83XUL1UP2jn8ynjndwCCpEHdUG+9pP1Tw=="
         }
       }
     },
@@ -3736,14 +3728,14 @@
       }
     },
     "volos-quota-redis": {
-      "version": "0.11.4",
-      "resolved": "https://registry.npmjs.org/volos-quota-redis/-/volos-quota-redis-0.11.4.tgz",
-      "integrity": "sha512-9wJStNabA6mgSvXdDQkfxcy2aM4xrrsB8DLtPnkmy+jEv4ZxjkcSXv/SMPeOduUOKcADXwY6Z/ixfsqdYRnkUw==",
+      "version": "0.11.5",
+      "resolved": "https://registry.npmjs.org/volos-quota-redis/-/volos-quota-redis-0.11.5.tgz",
+      "integrity": "sha512-dHq9R7iIOA4d6hUq+3vx4RaaeOMlnmx0TDN3DhUEzBvT0Ivtu4DzJ4HK8E/Dwuz2ND99DGwWnPXFz4bTOtEJXw==",
       "requires": {
         "debug": "^2.2.0",
         "redis": "0.10.x",
-        "underscore": "1.6.x",
-        "volos-quota-common": "^0.11.10"
+        "underscore": "1.12.1",
+        "volos-quota-common": "^0.11.11"
       },
       "dependencies": {
         "debug": {
@@ -3765,17 +3757,17 @@
           "integrity": "sha1-iSf+IRDuOWF7zz/Te4nY4SORG7Y="
         },
         "underscore": {
-          "version": "1.6.0",
-          "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.6.0.tgz",
-          "integrity": "sha1-izixDKze9jM3uLJOT/htRa6lKag="
+          "version": "1.12.1",
+          "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.12.1.tgz",
+          "integrity": "sha512-hEQt0+ZLDVUMhebKxL4x1BTtDY7bavVofhZ9KZ4aI26X9SRaE+Y3m83XUL1UP2jn8ynjndwCCpEHdUG+9pP1Tw=="
         },
         "volos-quota-common": {
-          "version": "0.11.10",
-          "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.10.tgz",
-          "integrity": "sha512-mj7biAXstfyYDXIWNzVUunyETIoREWSBTxu1pZv3II+hmfy9MYJ6Sp9JREKXLAkpZWanZaPrnf5qELF9alDY1g==",
+          "version": "0.11.11",
+          "resolved": "https://registry.npmjs.org/volos-quota-common/-/volos-quota-common-0.11.11.tgz",
+          "integrity": "sha512-nblGXL2A+ipBTJ8N3PTsBKos2GrEkxA/6fVuyx13MNNyK6+SAO43/1O+FcRUfH4DhVeJVLzeefQakCUFUuJIUw==",
           "requires": {
             "debug": "^2.2.0",
-            "underscore": "1.6.x"
+            "underscore": "1.12.1"
           },
           "dependencies": {
             "debug": {
@@ -3792,9 +3784,9 @@
               "integrity": "sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g="
             },
             "underscore": {
-              "version": "1.6.0",
-              "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.6.0.tgz",
-              "integrity": "sha1-izixDKze9jM3uLJOT/htRa6lKag="
+              "version": "1.12.1",
+              "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.12.1.tgz",
+              "integrity": "sha512-hEQt0+ZLDVUMhebKxL4x1BTtDY7bavVofhZ9KZ4aI26X9SRaE+Y3m83XUL1UP2jn8ynjndwCCpEHdUG+9pP1Tw=="
             }
           }
         }
