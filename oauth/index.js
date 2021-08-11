@@ -33,12 +33,9 @@ acceptField.alg = acceptAlg;
 
 var productOnly;
 var cacheKey = false;
+
 //setup cache for oauth tokens
 var tokenCache = false;
-sharedMemoryCache.setup({
-    purgeInterval: 10000
-});
-
 var tokenCacheSize = 100;
 
 let oauthConfigObj = null;
@@ -47,7 +44,12 @@ let authorizationHelper = null;
 module.exports.init = function(config, logger, stats) {
 
     if ( config === undefined || !config ) return(undefined);
-
+    
+    sharedMemoryCache.setup({
+        purgeInterval: 10000,
+        logger: logger
+    });
+    
     authorizationHelper = new AuthorizationHelper(debug);
     oauthConfigObj = config;
 
@@ -62,6 +64,8 @@ module.exports.init = function(config, logger, stats) {
 
         if ( !req || !res ) return(-1); // need to check bad args 
         if ( !req.headers ) return(-1); // or throw -- means callers are bad
+
+        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing middleware`);
 
         var authHeaderName = config.hasOwnProperty('authorization-header') ? config['authorization-header'] : 'authorization';
         var apiKeyHeaderName = config.hasOwnProperty('api-key-header') ? config['api-key-header'] : 'x-api-key';
@@ -149,6 +153,7 @@ module.exports.init = function(config, logger, stats) {
     }
 
     var exchangeApiKeyForToken = function(req, res, next, config, logger, stats, middleware, apiKey) {
+        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing exchangeApiKeyForToken`);
         var cacheControl = req.headers['cache-control'] || 'no-cache';
         if (cacheKey || (!cacheControl || (cacheControl && cacheControl.indexOf('no-cache') < 0))) { // caching is allowed
             apiKeyCache.read(apiKey, function(err, value) {
@@ -178,6 +183,7 @@ module.exports.init = function(config, logger, stats) {
     }
 
     function requestApiKeyJWT(req, res, next, config, logger, stats, middleware, apiKey, oldToken) {
+        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing requestApiKeyJWT`);
 
         if (!config.verify_api_key_url) return sendError(req, res, next, logger, stats, 'invalid_request', 'API Key Verification URL not configured');
 
@@ -222,8 +228,9 @@ module.exports.init = function(config, logger, stats) {
                 if (config.agentOptions.passphrase) api_key_options.passphrase = config.agentOptions.passphrase;
             }
         }
-        //debug(api_key_options);
+
         request(api_key_options, function(err, response, body) {
+            logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, verify_api_key_url response`);
             if ( !err && !response)  {
                 debug('empty response received from verify apikey call');
                 return sendError(req, res, next, logger, stats, 'internal_server_error', 'empty response received');
@@ -264,74 +271,87 @@ module.exports.init = function(config, logger, stats) {
     }
 
     var verify = function(token, config, logger, stats, middleware, req, res, next, apiKey) {
+        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify`);
 
         var isValid = false;
-        var oauthtoken = token && token.token ? token.token : token;
         var decodedToken = null;
-        //
+        var oauthtoken = token && token.token ? token.token : token;    
         try {
             decodedToken = JWS.parse(oauthtoken);
             req.token = decodedToken.payloadObj;
         } catch(e) {
-            // 'invalid_token'
             return sendError(req, res, next, logger, stats, 'invalid_token','token could not be parsed');
         }
-        //
+
         if (tokenCache === true) {
-            debug('token caching enabled')
-            validTokenCache.read(oauthtoken, function(err, tokenvalue) {
-                if (!err && tokenvalue !== undefined && tokenvalue !== null && tokenvalue === 'Y') {
-                    debug('found token in cache');
-                    isValid = true;
-                    if (ejectToken(decodedToken.payloadObj.exp)) {
-                        debug('ejecting token from cache');
-                        validTokenCache.remove(oauthtoken);
-                    }
-                } else {
-                    debug('token not found in cache');
-                    try {
-                        if (keys) {
-                            debug('using jwk');
-                            var pem = authorizationHelper.getPEM(decodedToken, keys);
-                            isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
-                        } else {
-                            debug('validating jwt');
-                            isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
-                        }                            
-                    } catch (error) {
-                        logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'error parsing jwt: ');
-                    }
-                }
-                if (!isValid) {
-                    if (config.allowInvalidAuthorization) {
-                        logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'ignoring err in verify');
-                        return next();
+            logger.debug({ }, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - token caching enabled`);
+            try {
+                validTokenCache.read(oauthtoken, function(err, tokenvalue) {
+                    if (!err && tokenvalue !== undefined && tokenvalue !== null && tokenvalue === 'Y') {
+                        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - found token in cache`);
+                        isValid = true;
+                        if (ejectToken(decodedToken.payloadObj.exp)) {
+                            logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - ejecting token from cache`);
+                            validTokenCache.remove(oauthtoken);
+                        }
                     } else {
-                        debug('invalid token');
-                        return sendError(req, res, next, logger, stats, 'invalid_token', 'invalid_token');
-                    }
-                } else {
-                    if (tokenvalue === null || tokenvalue === undefined) {
-                        validTokenCache.size(function(err, sizevalue) {
-                            if (!err && sizevalue !== null && sizevalue < tokenCacheSize) {
-                                let tokenCacheTtl = ( ( decodedToken.payloadObj.exp - new Date().getTime() / 1000) + gracePeriod ) * 1000;
-                                validTokenCache.store(oauthtoken, 'Y' , tokenCacheTtl);
+                        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - token not found in cache`);
+                        try {
+                            if (keys) {
+                                logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - using jwk`);
+                                var pem = authorizationHelper.getPEM(decodedToken, keys);
+                                isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
                             } else {
-                                debug('too many tokens in cache; ignore storing token');
-                            }
-                        });
+                                logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - validating jwt`);
+                                isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
+                            }                            
+                        } catch (error) {
+                            logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'error parsing jwt: ');
+                        }
                     }
-                    authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+                    if (!isValid) {
+                        if (config.allowInvalidAuthorization) {
+                            logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'ignoring error in verify');
+                            return next();
+                        } else {
+                            debug('invalid token');
+                            return sendError(req, res, next, logger, stats, 'invalid_token', 'invalid_token');
+                        }
+                    } else {
+                        if (tokenvalue === null || tokenvalue === undefined) {
+                            validTokenCache.size(function(err, sizevalue) {
+                                if (!err && sizevalue !== null && sizevalue < tokenCacheSize) {
+                                    let tokenCacheTtl = ( ( decodedToken.payloadObj.exp - new Date().getTime() / 1000) + gracePeriod ) * 1000;
+                                    validTokenCache.store(oauthtoken, 'Y' , tokenCacheTtl);
+                                } else {
+                                    debug('too many tokens in cache; ignore storing token');
+                                }
+                            });
+                        }
+                        authorize(req, res, next, logger, stats, decodedToken.payloadObj, apiKey);
+                    }
+                });
+            } 
+            catch (error) {
+                logger.eventLog({level:'warn', req: req, res: res, err:error, component:LOG_TAG_COMP }, 'error reading token cache');
+                if (config.allowInvalidAuthorization) {
+                    logger.eventLog({level:'warn', req: req, res: res, err:err, component:LOG_TAG_COMP }, 'ignoring error in verify');
+                    return next();
+                } 
+                else {
+                    debug('invalid token');
+                    return sendError(req, res, next, logger, stats, 'invalid_token', 'invalid_token');
                 }
-            });
+            }
         } else {
+            logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - token caching disabled`);
             try {
                 if (keys) {
-                    debug('using jwk');
+                    logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - using jwk`);
                     var pem = authorizationHelper.getPEM(decodedToken, keys);
                     isValid = JWS.verifyJWT(oauthtoken, pem, acceptField);
                 } else {
-                    debug('validating jwt');
+                    logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing verify - validating jwt`);
                     isValid = JWS.verifyJWT(oauthtoken, config.public_key, acceptField);
                 }
             } catch (error) {
@@ -352,6 +372,7 @@ module.exports.init = function(config, logger, stats) {
     };
 
     function authorize(req, res, next, logger, stats, decodedToken, apiKey) {
+        logger.debug({}, `Request ID: ${req['correlationId']}, plugin: oAuth, executing authorize`);
         req.token = decodedToken;
         if (checkIfAuthorized(config, req, res, decodedToken, productOnly, logger, LOG_TAG_COMP)) {
             var authClaims = _.omit(decodedToken, PRIVATE_JWT_VALUES);

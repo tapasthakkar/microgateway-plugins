@@ -4,7 +4,8 @@ var cluster = require('cluster');
 
 var logger = {
 	log: function() {},
-	warn: function() {}
+	warn: function() {},
+	debug: function() {}
 };
 
 var messagesCounter = 0;
@@ -158,9 +159,9 @@ function _purgeCache() {
 
 function _masterIncomingMessagesHandler(message) {
     var handler;
-    
-	logger.log('Master received message:', message);
 
+	logger.debug('Master received message:', message);
+	
 	if (!message || message.channel !== 'memored') return false;
 
     handler = masterMessagesHandlerMap[message.type] || masterMessagesHandlerMap.unknown;
@@ -169,22 +170,26 @@ function _masterIncomingMessagesHandler(message) {
 }
 
 function _workerIncomingMessagesHandler(message) {
-	logger.log('Worker received message:', message);
-
+	logger.debug('Worker received message:', message);
+	
 	var pendingMessage;
-
+	
 	if (!message || message.channel !== 'memored') return false;
+	
+	if (message.request_disconnect) {
+		process.env.request_disconnect = message.request_disconnect;
+		logger.debug({}, `[${process.pid}] Disconnecting request -> ${process.env.request_disconnect}`);
+		process.send('disconnect');
+	}
 
 	pendingMessage = activeMessages[message.id];
 	if (pendingMessage && pendingMessage.callback) {
 		pendingMessage.callback.apply(null, _getResultParamsValues(message.responseParams));
 		delete activeMessages[message.id];
 	}
-
 }
 
 if (cluster.isMaster) {
-
 	Object.keys(cluster.workers).forEach(function(workerId) {
 		cluster.workers[workerId].on('message', _masterIncomingMessagesHandler);
 	});
@@ -193,18 +198,8 @@ if (cluster.isMaster) {
 	cluster.on('fork', function(worker) {
 		worker.on('message', _masterIncomingMessagesHandler);
 	});
-
-	// TODO: Only for testing purposes
-	// setInterval(function() {
-	//	logger.log('\n------------------------------------------');
-	//	logger.log(cache);
-	//	logger.log('------------------------------------------\n');
-	// }, 2000).unref();
-
 } else {
-
 	process.on('message', _workerIncomingMessagesHandler);
-
 }
 
 function _setup(options) {
@@ -230,13 +225,18 @@ function _setup(options) {
 
 function _read(key, callback) {
 	if (cluster.isWorker) {
-		_sendMessageToMaster({
-			type: 'read',
-			requestParams: {
-				key: key
-			},
-			callback: callback
-		});
+		logger.debug({}, `[${process.pid}] Reading token from cache, request_disconnect: ${process.env.request_disconnect}`);
+		if(!process.env.request_disconnect) {
+			_sendMessageToMaster({
+				type: 'read',
+				requestParams: {
+					key: key
+				},
+				callback: callback
+			});
+		} else if (callback) {
+			callback();
+		}
 	} else {
 		logger.warn('Memored::read# Cannot call this function from master process');
 	}
@@ -274,20 +274,25 @@ function _multiRead(keys, callback) {
 
 function _store(key, value, ttl, callback) {
 	if (cluster.isWorker) {
-		if (typeof ttl === 'function') {
-			callback = ttl;
-			ttl = undefined;
+		logger.debug({}, `[${process.pid}] Caching token, request_disconnect: ${process.env.request_disconnect}`);
+		if(!process.env.request_disconnect) {
+			if (typeof ttl === 'function') {
+				callback = ttl;
+				ttl = undefined;
+			}
+	
+			_sendMessageToMaster({
+				type: 'store',
+				requestParams: {
+					key: key,
+					value: value,
+					ttl: ttl
+				},
+				callback: callback
+			});
+		} else if (callback) {
+			callback();
 		}
-
-		_sendMessageToMaster({
-			type: 'store',
-			requestParams: {
-				key: key,
-				value: value,
-				ttl: ttl
-			},
-			callback: callback
-		});
 	} else {
 		logger.warn('Memored::store# Cannot call this function from master process');
 	}
