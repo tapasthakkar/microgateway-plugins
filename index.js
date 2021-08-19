@@ -23,5 +23,7 @@ module.exports = {
   extauth: require('./extauth'),
   metrics: require('./metrics'),
   invalidHeader: require('./invalidHeader'),
+  /** @deprecated since v3.2.3 - use emgCache instead. */
   memored: require('./third_party/memored'),
+  emgCache: require('./emgCache'),
 }

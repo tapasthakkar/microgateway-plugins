@@ -5,9 +5,8 @@ var url = require('url');
 var rs = require('jsrsasign');
 var fs = require('fs');
 var path = require('path');
-const memoredpath = '../third_party/memored/index';
 const checkIfAuthorized =require('../lib/validateResourcePath');
-var sharedMemoryCache = require(memoredpath);
+var sharedMemoryCache = require('../emgCache');
 
 const AuthorizationHelper = require('../lib/AuthorizationHelper');
 
