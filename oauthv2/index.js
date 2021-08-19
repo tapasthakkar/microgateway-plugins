@@ -3,9 +3,8 @@
 var debug = require('debug')('plugin:oauthv2');
 var url = require('url');
 var rs = require('jsrsasign');
-const memoredpath = '../third_party/memored/index';
-const checkIfAuthorized =require('../lib/validateResourcePath');
-var map = require(memoredpath);
+const checkIfAuthorized = require('../lib/validateResourcePath');
+var map = require('../emgCache');
 var JWS = rs.jws.JWS;
 //var requestLib = require('request');
 var _ = require('lodash');

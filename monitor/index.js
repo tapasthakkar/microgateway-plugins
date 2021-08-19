@@ -5,8 +5,7 @@
 
 var debug = require('debug')('plugin:monitor');
 // var path = require('path');
-const memoredpath = '../third_party/memored/index';
-var cache = require(memoredpath);
+var cache = require('../emgCache');
 const lynx = require('lynx');
 const os = require('os');
 
