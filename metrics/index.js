@@ -1,6 +1,7 @@
 'use strict';
 const debug = require('debug')('plugin:metrics');
 const onFinished = require('on-finished');
+const clientClosedRequestErrCode = 499;
 
 module.exports.init = function(config, logger, stats ) {
     
@@ -10,6 +11,7 @@ module.exports.init = function(config, logger, stats ) {
                 let timestamp = Date.now();
                 const metricsRecord = req.headers['metrics_record'];
                 req.headers['client_sent_end_timestamp'] = timestamp;
+                if(req.aborted) metricsRecord['proxy_status_code'] = clientClosedRequestErrCode; // #TPS
                 metricsRecord['postflow_time'] = req.headers['client_sent_end_timestamp'] - req.headers['target_received_end_timestamp']; 
                 metricsRecord['target_time'] = req.headers['target_received_end_timestamp'] - req.headers['target_sent_start_timestamp']; 
                 metricsRecord['proxy_time'] = req.headers['client_sent_end_timestamp'] - req.headers['client_received_start_timestamp']; 
@@ -30,7 +32,8 @@ module.exports.init = function(config, logger, stats ) {
                                     ( req.targetPort ? ':' + req.targetPort : "") + req.targetPath;
             record['proxy_status_code'] = res.statusCode;
             req.headers['metrics_record'] = record;
-            logger.eventLog({level:'info',res:res,req:req,component:'metrics'});
+            logger.eventLog({ level: 'info', res: res, req: req, component: 'metrics' });
+            finalizeRecord(req, res);
             next();
         },
 
@@ -43,7 +46,6 @@ module.exports.init = function(config, logger, stats ) {
         },
 
         onend_response: function(req, res, next) {
-            finalizeRecord(req, res);
             next();
         }
     };
