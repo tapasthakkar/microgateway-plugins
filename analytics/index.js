@@ -1,6 +1,6 @@
 'use strict';
 
-//var debug = require('debug')('plugin:analytics');
+// var debug = require('debug')('plugin:analytics');
 var volos = require('volos-analytics-apigee');
 module.exports.init = function(config, logger /*, stats */) {
 
@@ -57,7 +57,7 @@ module.exports.init = function(config, logger /*, stats */) {
                                 ( req.targetPort ? ':' + req.targetPort : "") + req.targetPath;
 
         record['target_response_code'] = req.headers['target_response_code'];
-        
+        record.api_product = req.api_product || record.api_product;
         try {
             cb(null, record);
         } catch (e) {
