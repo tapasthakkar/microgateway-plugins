@@ -4,7 +4,7 @@
  */
 
 var debug = require('debug')('plugin:extauth');
-var request = require('request');
+var request = require('postman-request');
 var rs = require('jsrsasign');
 var JWS = rs.jws.JWS;
 

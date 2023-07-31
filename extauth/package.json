@@ -7,7 +7,7 @@
     "license": "Apache-2.0",
     "dependencies": {
       "jsrsasign": "^8.0.20",
-      "request": "^2.81.0",
+      "postman-request": "^2.88.1-postman.33",
       "debug": "^2.2.0"
     },
     "repository": {

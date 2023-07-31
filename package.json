@@ -23,7 +23,7 @@
     "lynx": "^0.2.0",
     "minimatch": "^3.0.4",
     "portastic": "^1.0.1",
-    "request": "^2.87.0",
+    "postman-request": "^2.88.1-postman.33",
     "toobusy-js": "^0.5.1",
     "volos-analytics-apigee": "^0.4.4",
     "volos-cache-memory": "^0.10.0",

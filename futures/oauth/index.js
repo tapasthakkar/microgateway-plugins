@@ -6,7 +6,7 @@ var basicAuth = require('../lib/basicAuth');
 //
 var fs = require('fs');
 var path = require('path');
-var requestLib = require('request');
+var requestLib = require('postman-request');
 
 
 class apiKeyAuthorization extends basicAuth.BasicAuthorizerPlugin {
