@@ -1,7 +1,7 @@
 //  quotaBugTest.js
  'use strict';
 
- const request = require('request');
+ const request = require('postman-request');
  let { user, password, key, secret, org, env, tokenSecret, tokenId } = require('./env.js');
  const assert = require('assert');
 

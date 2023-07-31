@@ -6,7 +6,7 @@ var rs = require('jsrsasign');
 const checkIfAuthorized = require('../lib/validateResourcePath');
 var map = require('../emgCache');
 var JWS = rs.jws.JWS;
-//var requestLib = require('request');
+//var requestLib = require('postman-request');
 var _ = require('lodash');
 
 const AuthorizationHelper = require('../lib/AuthorizationHelper');

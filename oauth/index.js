@@ -17,7 +17,7 @@ const apiKeyCache = sharedMemoryCache;
 const validTokenCache = sharedMemoryCache;
 
 var JWS = rs.jws.JWS;
-var requestLib = require('request');
+var requestLib = require('postman-request');
 var _ = require('lodash');
 
 const authHeaderRegex = /Bearer (.+)/;

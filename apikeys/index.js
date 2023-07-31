@@ -8,7 +8,7 @@ var path = require("path");
 const checkIfAuthorized = require('../lib/validateResourcePath');
 var cache = require('../emgCache');
 var JWS = rs.jws.JWS;
-var requestLib = require("request");
+var requestLib = require('postman-request');
 var _ = require("lodash");
 
 const AuthorizationHelper = require('../lib/AuthorizationHelper');
