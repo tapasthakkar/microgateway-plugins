@@ -29,7 +29,7 @@ module.exports.init = function (config, logger, stats) {
 					    buf = Buffer.from(b64string[1], 'base64').toString("ascii");
 					} else {
 					    // older Node versions
-					    buf = new Buffer(b64string[1], 'base64').toString("ascii");
+					    buf = Buffer.from(b64string[1], 'base64').toString("ascii");
 					}
 					if (buf) {
 						var parts = buf.split(":");

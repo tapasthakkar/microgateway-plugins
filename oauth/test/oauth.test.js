@@ -171,7 +171,7 @@ describe('oauth', function() {
 
           should.not.exist(res.body.headers['authorization']);
           should.exist(res.body.headers['x-authorization-claims']);
-          var claims = JSON.parse(new Buffer(res.body.headers['x-authorization-claims'], 'base64').toString());
+          var claims = JSON.parse(Buffer.from(res.body.headers['x-authorization-claims'], 'base64').toString());
           claims.should.have.keys('scopes', 'test');
 
           done();
@@ -257,7 +257,7 @@ describe('oauth', function() {
 
           should.exist(res.body.headers['authorization']);
           should.exist(res.body.headers['x-authorization-claims']);
-          var claims = JSON.parse(new Buffer(res.body.headers['x-authorization-claims'], 'base64').toString());
+          var claims = JSON.parse(Buffer.from(res.body.headers['x-authorization-claims'], 'base64').toString());
           claims.should.have.keys('scopes', 'test');
 
           done();
