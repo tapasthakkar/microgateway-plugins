@@ -245,7 +245,7 @@ describe('passthrough', function() {
     });
 
     it('should pass through if large', function(done) {
-      var data = new Buffer(1024 * 65);
+      var data = Buffer.alloc(1024 * 65);
       data.fill('x');
       data = data.toString();
       request(proxy)

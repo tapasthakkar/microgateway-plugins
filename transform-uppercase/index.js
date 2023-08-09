@@ -12,7 +12,7 @@ module.exports.init = function(/* config, logger, stats */) {
   // perform content transformation here
   // the result of the transformation must be another Buffer
   function transform(data) {
-    return new Buffer(data.toString().toUpperCase());
+    return Buffer.from(data.toString().toUpperCase());
   }
 
   return {

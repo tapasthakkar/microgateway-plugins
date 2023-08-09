@@ -18,7 +18,7 @@
     "dotenv": "^8.0.0",
     "eureka-js-client": "^4.3.0",
     "js2xmlparser": "^2.0.2",
-    "jsrsasign": "^10.2.0",
+    "jsrsasign": "^10.5.25",
     "lodash": "^4.17.19",
     "lynx": "^0.2.0",
     "minimatch": "^3.0.4",
@@ -32,20 +32,20 @@
     "volos-quota-memory": "^0.11.0",
     "volos-quota-redis": "^0.11.6",
     "volos-spikearrest-memory": "^0.10.0",
-    "xml2js": "^0.4.17"
+    "xml2js": "^0.5.0"
   },
   "devDependencies": {
     "chai": "^2.3.0",
-    "config": "^1.13.0",
+    "config": "^3.3.9",
     "eslint": "^6.1.0",
     "eslint-config-google": "^0.13.0",
     "js-yaml": "^3.4.2",
     "jshint-stylish": "^2.2.1",
-    "jsonwebtoken": "^9.0.0",
+    "jsonwebtoken": "^9.0.1",
     "mocha": "^9.0.1",
     "nyc": "^15.1.0",
     "pem": "^1.7.2",
-    "supertest": "^3.1.0",
+    "supertest": "^6.3.3",
     "volos-analytics-memory": "^0.2.0"
   }
 }
