@@ -16,7 +16,6 @@
     "async": "^2.6.4",
     "debug": "^3.1.0",
     "dotenv": "^8.0.0",
-    "eureka-js-client": "^4.3.0",
     "js2xmlparser": "^2.0.2",
     "jsrsasign": "^10.5.25",
     "lodash": "^4.17.19",
