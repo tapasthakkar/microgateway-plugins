@@ -5,7 +5,7 @@
   "description": "A plugin for distributed quota coordinated by Apigee Edge",
   "dependencies": {
     "debug": "^2.2.0",
-    "volos-quota-apigee": "^0.13.0"
+    "volos-quota-apigee": "^0.14.0"
   },
   "devDependencies": {
     "chai": "^2.3.0",
