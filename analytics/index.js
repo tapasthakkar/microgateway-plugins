@@ -58,6 +58,7 @@ module.exports.init = function(config, logger /*, stats */) {
 
         record['target_response_code'] = req.headers['target_response_code'];
         record.api_product = req.api_product || record.api_product;
+        record['gateway_flow_id'] = req['correlationId'];
         try {
             cb(null, record);
         } catch (e) {
