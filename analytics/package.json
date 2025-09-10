@@ -5,7 +5,7 @@
   "description": "A plugin for sending API Analytics from Apigee Edge Microgateway to Apigee Edge",
   "dependencies": {
     "debug": "^2.2.0",
-    "volos-analytics-apigee": "^0.5.0"
+    "volos-analytics-apigee": "^0.5.1"
   },
   "devDependencies": {
     "chai": "^2.3.0",
